@@ -1,0 +1,58 @@
+{
+  "00_templateVARIABLE": {
+    "a_fase": {
+      "dataPath": "/collection/{{UID}}_{{DID}}",
+      "deepMerge": false,
+      "rules": [
+        {
+          " type": "variables",
+          "MYDATOQUEMADO": "Mi Dato Quemado",
+          "VARIABLE": "{{F0000}}",
+          "UID": "{{F0001}}-{{F0002}}",
+          "DID": "{{F0003}}_{{F0004}}-{{F0005}}"
+        },
+        {
+          " type": "fields",
+          "name0": "{{F0006}}",
+          "{{VARIABLE}}-name1": "{{F0007}}",
+          "name1{{VARIABLE}}": "{{F0008}}",
+          "name3": "{{MYDATOQUEMADO}}"
+        },
+        {
+          " type": "array",
+          "arrayName": [
+            "{{F0010}}",
+            "{{F0011}}",
+            "{{F0012}}"
+          ]
+        },
+        {
+          " type": "mapArray",
+          "mapArrayName": [
+            {
+              "name0": "{{F0013}}"
+            },
+            {
+              "name1": "{{F0014}}"
+            },
+            {
+              "name2": "{{F0015}}"
+            },
+            {
+              "name3": "{{F0016}}"
+            }
+          ]
+        },
+        {
+          " type": "map",
+          "mapName": {
+            "name0": "{{F0017}}",
+            "name1": "{{F0018}}",
+            "name2": "{{F0019}}",
+            "name3": "{{F0020}}"
+          }
+        }
+      ]
+    }
+  }
+}

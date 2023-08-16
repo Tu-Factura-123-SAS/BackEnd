@@ -1,0 +1,12 @@
+{
+  "firebase": {
+    "projectId": "tf-tenant",
+    "databaseURL": "https://tf-tenant-default-rtdb.firebaseio.com",
+    "storageBucket": "tf-tenant.appspot.com",
+    "locationId": "us-central"
+  },
+  "claims": {
+    "collection": "rolesRun2",
+    "field": "customClaims"
+  }
+}
