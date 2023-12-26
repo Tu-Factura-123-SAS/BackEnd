@@ -37,6 +37,12 @@ exports.onUpdateCustomersJourneys = functions.firestore
   .onUpdate(require("./triggers/customersJourneys/onUpdate"));
 
 
+  
+exports.onUpdateColors = functions.firestore
+  .document("/entities/{uid}/branchOffices/{branchOffice}")
+  .onUpdate(require("./triggers/colors/onUpdate"));
+
+
 exports.tf = functions.runWith(gb4).https.onCall(require("./robot"));
 
 // Middleware v0
