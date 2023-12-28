@@ -21,7 +21,7 @@
  */
 
 function createLandingPagesObject(document) {
-  return { ...document.colors };
+  return { colors: { ...document.colors } };
 };
 
 /**
@@ -34,13 +34,14 @@ function createLandingPagesObject(document) {
 module.exports = async (change, context) => {
   try {
 
-    const { uid, branchOffice } = context.params;
+    const { uid } = context.params;
     const documentAfter = change.after.exists ? change.after.data() : null;
     const documentBefore = change.before.exists ? change.before.data() : null;
 
     if (documentAfter.colors != documentBefore.colors) {
       const colorsData = createLandingPagesObject(documentAfter);
-      await mergeInFirestore(`entities/${uid}/branchOffices/${branchOffice}`, { colors: colorsData }, false);
+
+      await mergeInFirestore(`rolesRun/${uid}`, { v0: { ...colorsData } }, false);
     }
     return null;
   } catch (error) {
