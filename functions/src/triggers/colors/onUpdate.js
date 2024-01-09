@@ -4,7 +4,7 @@
  * @version 0.0.1
  * @date 2023-12-28
  * @description Este archivo contiene una función que se ejecuta al
- * actualizar la sucursal en Firestore. 
+ * actualizar la sucursal en Firestore.
  * La función realiza acciones dependiendo de
  * si se han actualizado o no los colores de la sucursal.
  * @env production Firebase Functions

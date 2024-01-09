@@ -35,8 +35,8 @@
 // exports.onUpdateCustomersJourneys = functions.firestore
 //   .document("/entities/{alliance}/branchOffices/{allianceBranchOffice}/{appCollection}/{billerUnderscoreBranchOffice}/customersJourneys/{uid}")
 //   .onUpdate(require("./triggers/customersJourneys/onUpdate"));
-  
-  
+
+
 // exports.onUpdateColors = functions.firestore
 //   .document("/entities/{uid}/branchOffices/{branchOffice}")
 //   .onUpdate(require("./triggers/colors/onUpdate"));
