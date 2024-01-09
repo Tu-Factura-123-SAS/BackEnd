@@ -1,28 +1,32 @@
 /**
- * @developer Jovanny Medina Cifuentes
- * @contact github@jovanny.co  573004080808
- * @see {@link https://github.com/JovannyCO}
+ * @developer Katherin Ortiz
+ * @see {@link https://github.com/Katherin-Ortiz}
  * @version 0.0.1
- * @date 2023-06-24
+ * @date 2023-12-28
  * @description Este archivo contiene una función que se ejecuta al
- * escribir ítems en Firestore. La función realiza acciones dependiendo de
- * si se han agregado o eliminado vistas en páginas de destino.
+ * actualizar la sucursal en Firestore. 
+ * La función realiza acciones dependiendo de
+ * si se han actualizado o no los colores de la sucursal.
  * @env production Firebase Functions
- * @module functions/triggers/items/onWrite
+ * @module functions/triggers/colores/onUpdate
  * @language JavaScript
  * @testing_framework jest
  */
 
+/* eslint-disable require-jsdoc */
+
 /**
- * Construye y retorna un objeto que representa una página de destino.
+ * Construye y retorna un objeto que representa los colores y tema de la sucursal.
  *
- * @param {Object} document - Datos completos de la branchoffice.
+ * @param {Object} document - Datos completos de la branchOffice.
  * @return {Object} Representación estructurada de colores.
  */
 
-function createLandingPagesObject(document) {
-  return { colors: { ...document.colors } };
-};
+const {mergeInFirestore} = require("../../database/firestore");
+
+function createColorsObject(document) {
+  return {colors: {...document.colors}};
+}
 
 /**
  * Función para manejar escritura de documentos en Firestore.
@@ -33,15 +37,13 @@ function createLandingPagesObject(document) {
  */
 module.exports = async (change, context) => {
   try {
-
-    const { uid } = context.params;
+    const {uid} = context.params;
     const documentAfter = change.after.exists ? change.after.data() : null;
     const documentBefore = change.before.exists ? change.before.data() : null;
 
     if (documentAfter.colors != documentBefore.colors) {
-      const colorsData = createLandingPagesObject(documentAfter);
-
-      await mergeInFirestore(`rolesRun/${uid}`, { v0: { ...colorsData } }, false);
+      const colorsData = createColorsObject(documentAfter);
+      await mergeInFirestore(`rolesRun/${uid}`, {v0: {...colorsData}});
     }
     return null;
   } catch (error) {

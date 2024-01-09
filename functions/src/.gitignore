@@ -1,0 +1,10 @@
+#Logs
+logs
+*.log
+nmp-debug.log*
+yarn-debug.log*
+yarn-error.log*
+firebase-debug.log*
+firebase-debug.*.log*
+
+node_modules/
