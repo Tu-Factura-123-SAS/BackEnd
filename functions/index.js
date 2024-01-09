@@ -64,6 +64,11 @@ exports.onUpdateColors = functions.firestore
     .onUpdate(require("./src/triggers/colors/onUpdate"));
 
 
+exports.onUpdateEntitiesAuth = functions.firestore
+    .document("/entities/{uid}")
+    .onUpdate(require("./src/triggers/entitiesAuth/onUpdate"));
+
+
 // exports.tf = functions.runWith(gb4).https.onCall(require("./robot"));
 exports.tf = functions.runWith(gb4).https.onCall(require("./src/robot"));
 
