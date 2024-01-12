@@ -52,7 +52,7 @@ const getLink = async (
 
         if (myRoles.docs.length === 0) {
           myRoles = await myRolesRef
-            .where(`${currentUserIdAuth}.enabled`, "==", true)
+            .where(`${currentUserIdAuth}.enabled`, "==", true) // CO-1144081388.enabled en coleccion entities/user/roles/
             .get();
 
           if (myRoles.docs.length === 0) {
