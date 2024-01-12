@@ -4,13 +4,13 @@ const {sleep} = require("../../admin/utils");
 // const {sleep} = require("../../admin/utils");
 
 
+const { auth, users, dbFS } = require("../../admin");
+
 const getLink = async (
   context,
   goToBiller,
   goToBillerBranchOffice,
 ) => {
-  const {auth, users, dbFS} = require("../../admin");
-
 
   let originRaw = false;
   let currentUserIdAuth = false;
@@ -38,6 +38,11 @@ const getLink = async (
 
       // console.log(await getCustomClaimsFromRoles(currentUserIdAuth, goToBiller, goToBillerBranchOffice));
 
+      // Nueva funcionalidad para cambiar el facturador
+      if (context.auth.customClaims && context.auth.customClaims.developer) {
+        goToEntity["customClaims"]["current"] = {biller: goToBiller, branchOffice: goToBillerBranchOffice};
+      }
+
       if (currentUserIdAuth === goToBiller) {
         goToEntity["customClaims"][currentUserIdAuth] = true;
 
@@ -52,7 +57,7 @@ const getLink = async (
 
         if (myRoles.docs.length === 0) {
           myRoles = await myRolesRef
-            .where(`${currentUserIdAuth}.enabled`, "==", true)
+            .where(`${currentUserIdAuth}.enabled`, "==", true) // CO-1144081388.enabled en coleccion entities/user/roles/
             .get();
 
           if (myRoles.docs.length === 0) {

@@ -1,0 +1,7 @@
+{
+  "access_token": "ya29.a0AWY7CklncphogV_SG2I3NJD3u0W8fzAaDMVx9vTZMn9TXmTyD_rdWnjG20nES5njCWjXuoyfd7XdIh9cd291XFTwJjIwPsfksgBcvAStLMKzE8t-UlwP6IvMdIN6Zj8sR_XOCk7fPZQnotm9mMqbyD4zsjImaCgYKAdUSARESFQG1tDrp_M5XNHM2MyzX8m5aO-j2SQ0163",
+  "refresh_token": "1//05cA5DhDF29j2CgYIARAAGAUSNwF-L9Ir9DwcCn7GtllgUB1UQGySHGdl4jgX-rsw2GOCRsJR0Qoh6doGxmJujDBLROpwKWz0E2c",
+  "scope": "https://www.googleapis.com/auth/spreadsheets https://www.googleapis.com/auth/calendar https://www.googleapis.com/auth/postmaster.readonly https://mail.google.com/ https://www.googleapis.com/auth/drive",
+  "token_type": "Bearer",
+  "expiry_date": 1686770316934
+}
