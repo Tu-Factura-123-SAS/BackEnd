@@ -48,20 +48,20 @@ const getTextPdf = async (
       }
     });
 
-
     // Almacenamos los datos por cada path único.
     const {getDataFromManyPaths} = require("../dian/xml");
     const dataManyPath = await getDataFromManyPaths(keyValuepathList);
     // console.log(dataManyPath);
 
-
     // Cargamos en cada values lo que está en dataManyPath
     Object.keys(values).forEach((keyPath)=>{
       // Hacemos control con el primer caracter
-      const firstChr = values[keyPath][0];
-      // Si contiene el path, lo reemplazamos por la data.
-      if (firstChr === "/" && keyPath !== "document") {
-        values[keyPath] = dataManyPath[values[keyPath]];
+      if (values[keyPath] != undefined) {
+        const firstChr = values[keyPath][0];
+        // Si contiene el path, lo reemplazamos por la data.
+        if (firstChr === "/" && keyPath !== "document") {
+          values[keyPath] = dataManyPath[values[keyPath]];
+        }
       }
     });
 

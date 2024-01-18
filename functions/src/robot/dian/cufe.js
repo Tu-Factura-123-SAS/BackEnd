@@ -110,8 +110,8 @@ const getCufe = async (
       (NumAdq = " ¶¶_NumAdq/");
     }
 
+    const technicalKey = await getOneDocument(`/entities/${nitBiller}/consecutivesControl/${document.document.resolution}`);
 
-    const technicalKey = await getOneDocument(`/entities/${nitBiller}/consecutivesControl/${document.document.resolution.sts_InvoiceAuthorization}`);
     technicalKey.data.technicalKey != undefined ?
       ClTec = technicalKey.data.technicalKey:
       ClTec = " ¶¶_technicalKey/";
