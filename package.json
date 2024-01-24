@@ -11,6 +11,7 @@
     }
   ],
   "scripts": {
+    "push": "clear && GIT_BRANCH=$(git symbolic-ref HEAD | sed 's/.*\\///' | tr '_' ' ') && GIT_USER=$(git config user.name) && clear && git pull origin main && git add . && read -p \"\n${GIT_USER}, ¿Qué cambios o ajustes hiciste en esta versión? \n ¡Cuéntanos todo! : \" CUSTOM_MESSAGE && git commit -m \"$(date +\"%d%b%H%M\") ⛘ ${CUSTOM_MESSAGE} - ${GIT_BRANCH}\" && git push",
     "lint": "eslint .",
     "serve": "firebase emulators:start --only functions",
     "shell": "firebase functions:shell",

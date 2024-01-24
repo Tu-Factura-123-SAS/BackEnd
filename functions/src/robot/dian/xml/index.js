@@ -614,11 +614,13 @@ const componentJSONbackend = async (
 async function getDataFromManyPaths(onlyPaths) {
   const {getThisDocument} = require("../../../admin/utils");
   const valuesData = {};
+  let dataKeys = Object.keys(onlyPaths).sort();
 
-  const dataKeys = Object.keys(onlyPaths).sort();
+  dataKeys = dataKeys.filter((key) => {
+    return key != "undefined";
+  });
 
   for (const dataKey of dataKeys) {
-    // console.info(dataKey);
     valuesData[dataKey] = await getThisDocument(onlyPaths[dataKey], `valuesData.${dataKey}`);
   }
 
