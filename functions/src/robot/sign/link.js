@@ -4,13 +4,16 @@ const {sleep} = require("../../admin/utils");
 // const {sleep} = require("../../admin/utils");
 
 
+const { auth, users, dbFS } = require("../../admin");
+
 const getLink = async (
   context,
   goToBiller,
   goToBillerBranchOffice,
-) => {
-  const {auth, users, dbFS} = require("../../admin");
 
+  // newBiller,
+
+) => {
 
   let originRaw = false;
   let currentUserIdAuth = false;
@@ -28,6 +31,21 @@ const getLink = async (
 
     try {
       goToEntity["customClaims"] = {};
+
+      // Nueva funcionalidad para cambiar el facturador
+      if (context.auth.customClaims && context.auth.customClaims.developer) {
+        goToEntity["customClaims"]["current"] = {biller: goToBiller, branchOffice: goToBillerBranchOffice};
+      }
+
+      //  if (currentUserIdAuth === newBiller) {
+      //  goToEntity["customClaims"]["current"] = { biller: currentUserIdAuth, branchOffice: "principal" };
+      //} else {
+      //  goToEntity["customClaims"]["current"] = { biller: newBiller, branchOffice: "principal" };
+
+      // Actualizar roles según el nuevo facturador
+      //await updateRolesForNewBiller(currentUserIdAuth, newBiller);
+
+
       // goToEntity["customClaims"]["currentBiller"] = `${currentUserIdAuth}_principal`;
       goToEntity["customClaims"]["current"] = {biller: currentUserIdAuth, branchOffice: "principal"};
 
@@ -182,6 +200,10 @@ const getLink = async (
         });
       }
       // console.log(goToEntity.data.entitiesAuth);
+
+      //const roles = await getRolesForUser(currentUserIdAuth, newBiller);
+      //configureCustomClaims(goToEntity["customClaims"], roles);
+
     } catch (error) {
       console.log(error.message);
     }
@@ -224,6 +246,60 @@ const getLink = async (
     return Promise.reject(new Error("⚠️ Acceso denegado - No hay una sesión activa."));
   }
 };
+
+// async function updateRolesForNewBiller(currentUserId, newBiller) {
+  // try {
+    // Lógica para actualizar roles según el nuevo facturador
+    // const newBillerRoles = await dbFS.collection("entities").doc(newBiller).collection("roles").get();
+    
+    // Actualizar roles del usuario actual con los roles del nuevo facturador
+    // newBillerRoles.forEach((role) => {
+      // const roleId = role.id;
+      // const roleData = role.data();
+      
+      // Lógica para actualizar roles del usuario actual según el nuevo facturador
+      // dbFS.collection("entities").doc(currentUserId).collection("roles").doc(roleId).set(roleData);
+    // });
+    // return Promise.resolve();
+  // } catch (error) {
+    // return Promise.reject(new Error(`Error al actualizar roles: ${error.message}`));
+  // }
+// }
+
+// async function getRolesForUser(currentUserId, newBiller) {
+  //try {
+    // Lógica para obtener roles del usuario según el nuevo facturador
+    // Aquí asumo que los roles del usuario están almacenados en una colección dentro del documento del usuario.
+    //const userRolesSnapshot = await dbFS.collection("entities").doc(currentUserId).collection("roles").get();
+    //const userRoles = {};
+
+    // Construir la estructura de roles del usuario
+    //userRolesSnapshot.forEach((role) => {
+    //  const roleId = role.id;
+    //  const roleData = role.data();
+    //  userRoles[roleId] = roleData;
+    //});
+
+    //return Promise.resolve(userRoles);
+  //} catch (error) {
+  //  return Promise.reject(new Error(`Error al obtener roles del usuario: ${error.message}`));
+  //}
+//}
+
+//function configureCustomClaims(customClaims, roles) {
+//  try {
+    // Lógica para configurar customClaims según los roles
+    // Aquí asumo que los roles y customClaims tienen una relación directa.
+    //for (const roleId in roles) {
+    //  const roleValue = roles[roleId];
+    //  customClaims[roleId] = roleValue;
+    //}
+
+    //return Promise.resolve();
+  //} catch (error) {
+  //  return Promise.reject(new Error(`Error al configurar customClaims: ${error.message}`));
+  //}
+//}
 
 
 module.exports = {
