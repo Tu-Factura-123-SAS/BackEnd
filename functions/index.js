@@ -72,6 +72,11 @@ exports.onUpdateEntitiesAuth = functions.firestore
 // exports.tf = functions.runWith(gb4).https.onCall(require("./robot"));
 exports.tf = functions.runWith(gb4).https.onCall(require("./src/robot"));
 
+// test
+exports.driveTest = functions.runWith(gb4).https.onCall(require("./src/google/drive"));
+// /home/tufactura/BackEnd/functions/src/google/drive/index.js
+
+
 // Middleware v0
 const {cacheMiddleware, tenantHandler} = require("./src/middlewares");
 

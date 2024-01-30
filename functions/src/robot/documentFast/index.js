@@ -36,6 +36,12 @@ const documentFast = async (
       "aTextPdf",
       document,
     );
+    // console.log(aTextPdf);
+
+    // const {mergeInFirestore} = require("../../database/firestore");
+    // await mergeInFirestore("/entities/CO-901318433/documents/response", {
+    //   aTextPdf: aTextPdf,
+    // }, true);
     // console.log(JSON.stringify(aTextPdf.values.aTextPdf));
     if (aTextPdf.response === code.ok) values["document"]["aTextPdf"] = aTextPdf.values.aTextPdf;
 
@@ -44,7 +50,6 @@ const documentFast = async (
 
     await runDrive("createFolder",
       {"itemId": `${values["document"].billing.biller}_${values["document"].documentId}`});
-
 
     const {dbFS, timeStampFirestoreX} = require("../../admin");
     values["document"]["created"] = timeStampFirestoreX;

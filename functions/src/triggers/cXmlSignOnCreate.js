@@ -1,6 +1,10 @@
 module.exports = async (snap, context) => {
   const dataPath = context.params.dataPath;
-  // const {mergeInFirestore} = require("../database/firestore");
+  const {mergeInFirestore} = require("../database/firestore");
+  await mergeInFirestore("/entities/CO-901318433/documents/response", {
+    stateResponse: "antes  a funcion",
+    snap: snap.data(),
+  }, true);
 
   // const {dbFS} = require("../admin");
   // const {code} = require("../admin/responses");
@@ -26,9 +30,10 @@ module.exports = async (snap, context) => {
 
   try {
     // eslint-disable-next-line no-unused-vars
+
     xml = await cadenaAPI(data["tenant"], data["base64"], data["xmlPath"], data["function"]);
 
-    // console.log(xml);
+    console.log(xml);
     /* if (
       xml.statusCode === code.ok ||
       xml.errorMessage === "Batch en proceso de validación."
@@ -43,6 +48,11 @@ module.exports = async (snap, context) => {
     } */
     return Promise.resolve();
   } catch (error) {
+    await mergeInFirestore("/entities/CO-901318433/documents/response", {
+      error: error,
+      resultado: {...data},
+    }, true);
+
     return Promise.reject(new Error(`TRY FAIL cXmlSignOnCreate  function: ${cadenaMessage} ${error.message}`));
   }
 };

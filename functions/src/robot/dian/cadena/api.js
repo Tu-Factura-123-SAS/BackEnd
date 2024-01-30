@@ -12,6 +12,11 @@ const cadenaAPI = async (
     return await Promise.reject(new Error(`cadenaAPI SIN XML ${pathOutXML}`));
   }
 
+  // await mergeInFirestore(pathDocumentSign, {
+  //   stateResponse: "entra a funcion",
+  //   resultado: {mTenantRaw: mTenantRaw, xml: xml, pathOutXML: pathOutXML, modeAPI: modeAPI},
+  // }, true);
+
 
   const fetch = require("node-fetch");
   const {tenant} = require("../../../admin/hardCodeTenants");
@@ -79,19 +84,24 @@ const cadenaAPI = async (
       body: `"${xml}"`,
     })
       .then((response) => response.json())
-      .catch((error) => {
+      .catch(async (error) => {
+        await mergeInFirestore(pathDocumentSign, {
+          stateError: `cadenaAPI fetch  ${error.name} ${error.message}`,
+        }, true);
+
         return Promise.reject(new Error(`cadenaAPI fetch  ${error.name} ${error.message}`));
       });
 
+    await mergeInFirestore(pathDocumentSign, {
+      stateError: `cadenaAPI fetch ${JSON.stringify(responseX)}`,
+    }, true);
 
     // responseX["signedDate"] = timeStampFirestoreX;
-
 
     let xmlResponse;
     responseX.document !== undefined ?
       xmlResponse = cryptoX("deco-base64-utf8", responseX.document):
       xmlResponse = "NO XML";
-
 
     switch (responseX.statusCode) {
     case 200:
@@ -152,8 +162,8 @@ const cadenaAPI = async (
       rootResponse["state"] = `Error ${responseX.statusCode}`;
     }
 
-
     // En caso de que exista XML, se genera la siguiente tarea en f_xml_reception.
+    // Error aqui
     if (xmlResponse !== "NO XML") {
       let uuid = false;
 
@@ -163,14 +173,19 @@ const cadenaAPI = async (
 
 
       if (uuid) {
-        const {runDrive} = require("../../../google/drive");
-
-        await runDrive("processDIAN", {
-          "extension": "xml",
-          "itemId": itemId,
-          "payload": xmlResponse.deco,
-        },
-        );
+        // const {runDrive} = require("../../../google/drive");
+        await mergeInFirestore(pathDocumentSign, {
+          itemId: itemId,
+          xmlResponseDeco: xmlResponse.deco,
+          pathDocumentStateEntity: pathDocumentStateEntity,
+        }, true);
+        // await runDrive("processDIAN", {
+        //   "extension": "xml",
+        //   "itemId": itemId,
+        //   "payload": xmlResponse.deco,
+        // },
+        // pathDocumentStateEntity,
+        // );
       }
     }
 
@@ -185,7 +200,16 @@ const cadenaAPI = async (
         [typeSign]: responseX,
       },
     };
+
+
+    await mergeInFirestore(pathDocumentSign, {
+      stepDIAN: `antes`,
+    }, true);
     await mergeInFirestore(pathDocumentSign, log, true);
+
+    await mergeInFirestore(pathDocumentSign, {
+      stepDIAN: `despues`,
+    }, true);
 
     return Promise.resolve(`{response: ${code.accepted}}`);
   } catch (error) {

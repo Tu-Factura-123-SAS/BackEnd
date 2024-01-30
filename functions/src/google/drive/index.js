@@ -10,6 +10,7 @@ const {mergeInFirestore} = require("../../database/firestore");
 const runDrive = async (
   run,
   task,
+  // test = "",
   mTenant = "tufactura.com",
   uid = "SYSTEM",
   ip = "127.0.0.1",
@@ -19,12 +20,25 @@ const runDrive = async (
   const {tenant} = require("../../admin/hardCodeTenants");
   const {howOften} = require("../../admin/utils");
   const tenantX = tenant(mTenant); // HARDCODE debe ser automático el tenant
+  // await mergeInFirestore("/entities/CO-901318433/documents/EB_FE24-53", {
+  //   stepDIAN: `tenantX ${tenantX} `,
+  //   // stepDIAN: `taskValues.gDriveRef ${taskValues.gDriveRef}, test ${test} `,
+  //   // stepDIAN: {
+  //   //   run: run,
+  //   //   task: task,
+  //   //   // test: test,
+  //   //   mTenant: mTenant,
+  //   //   uid: uid,
+  //   //   ip: ip,
+  //   // },
+  // }, true);
   // INIT Task values of large scope (all functions).
   const taskValues = {};
   taskValues.uid = uid;
   taskValues.ip = ip;
   const {PassThrough} = require("stream");
   const zipPassThrough = new PassThrough();
+
 
   if (howOften(task.itemId, "_") === 2) {
     // itemId = ENTITY_TYPE_CONSECUTIVE
@@ -65,7 +79,6 @@ const runDrive = async (
     case "xml":
       // Se entiende que solo se suben las respuestas válidas de la DIAN.
       taskValues["payloadX"] = task.payload;
-
 
       // la colección f_xml_reception recibe y procesa el XML
       await mergeInFirestore(`/ f_xml_reception/${taskValues.itemId}`, {dian: taskValues.payloadX || false});
@@ -150,9 +163,18 @@ const runDrive = async (
 
     taskValues["getParentFolderId"] = await getOneDocument(taskValues.gDriveRef);
 
+
     if (taskValues.getParentFolderId.data.id) {
+      await mergeInFirestore(taskValues.gDriveRef, {
+        stateError: `Si esta creado el folder ${taskValues.gDriveRef}`,
+      }, true);
+
       taskValues["id"] = taskValues.getParentFolderId.data.id;
     } else {
+      await mergeInFirestore(taskValues.gDriveRef, {
+        stateError: `No esta creado el folder ${taskValues.gDriveRef}`,
+      }, true);
+
       return await Promise.reject(new Error(JSON.stringify({
         response: code.badRequest,
         callback: run,
