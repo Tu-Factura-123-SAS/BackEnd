@@ -74,6 +74,11 @@ exports.tf = functions.runWith(gb4).https.onCall(require("./src/robot"));
 
 // test
 exports.driveTest = functions.runWith(gb4).https.onCall(require("./src/google/drive"));
+// exports.driveTest = functions.runWith(gb4).https.onCall(require("./src/google/drive"));
+
+exports.driveTest1 = functions.firestore
+    .document("/entities/CO-901318433/documents/test")
+    .onUpdate(require("./src/google/drive"));
 // /home/tufactura/BackEnd/functions/src/google/drive/index.js
 
 
