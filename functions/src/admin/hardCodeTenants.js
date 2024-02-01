@@ -182,6 +182,7 @@ const tenant = (tenantX) => {
       Object.assign(responseObject, {response: code.notImplemented});
     }
   }
+  console.log(responseObject);
   return responseObject;
 };
 module.exports = {tenant};

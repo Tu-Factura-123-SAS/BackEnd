@@ -552,12 +552,13 @@ if (dataX("callGroup") === "runDriveTest") {
   // return await Promise.reject(new Error(dataX("run")));
   const {runDrive} = require("../google/drive");
 
-  responseRobot["runDrive"] = await runDrive(dataX("run"), {
+  responseRobot["runDrive"] = await runDrive({
+    run: dataX("run"),
     extension: dataX("extension"),
     itemId: dataX("itemId"),
     payload: dataX("payload"),
+    pathDocumentStateEntity: dataX("pathDocumentStateEntity"),
   },
-  dataX("pathDocumentStateEntity"),
   );
 }
 

@@ -1,249 +1,268 @@
 // const {emoji} = require("../../admin/standards/emoji");
-// const {code} = require("../../admin/responses");
-// const {extensionX} = require("../../admin/extensionToMimeType");
+const {code} = require("../../admin/responses");
+const {extensionX} = require("../../admin/extensionToMimeType");
 // const credential = require("../credentials.json");
 // const tokenDrive = require("../tokenGoogleWorkSpace.json");
-// const {getOneDocument} = require("../../database/firestore");
+const {getOneDocument} = require("../../database/firestore");
 const {mergeInFirestore} = require("../../database/firestore");
 
 
 module.exports = async (
   // const runDrive = async (
-  // run,
+  runData, // run
   // task,
-  // // test = "",
+  // test = "",
   // mTenant = "tufactura.com",
   // uid = "SYSTEM",
   // ip = "127.0.0.1",
-) => {
+  ) => {
+    const mTenant = "tufactura.com";
+    const uid = "SYSTEM";
+    const ip = "127.0.0.1";
   // https://github.com/JovannyCO/FacturaDIAN-Hosting/wiki/runDrive#rundrive
-  // const {google} = require("googleapis");
-  // const {tenant} = require("../../admin/hardCodeTenants");
-  // const {howOften} = require("../../admin/utils");
-  // const tenantX = tenant(mTenant); // HARDCODE debe ser automático el tenant
-  // console.log(run);
-  // return await Promise.reject(new Error(JSON.stringify({message: "Respuesta"})));
-  await mergeInFirestore("/entities/CO-901318433/documents/response", {
-    message: "PASO?",
-  //   taskA: `${JSON.stringify(task)}`,
-  //   // run: `${JSON.stringify(run)}`,
-  //   // mTenant: `${JSON.stringify(mTenant)}`,
-  //   // uid: `${JSON.stringify(uid)}`,
-  //   // ip: `${JSON.stringify(ip)}`,
-  //   // taskValues: `${JSON.stringify(taskValues)}`,
-  }, true);
-  // await mergeInFirestore("/entities/CO-901318433/documents/EB_FE24-53", {
-  //   stepDIAN: `tenantX ${tenantX} `,
-    // stepDIAN: `taskValues.gDriveRef ${taskValues.gDriveRef}, test ${test} `,
-    // stepDIAN: {
-    //   run: run,
-    //   task: task,
-    //   // test: test,
-    //   mTenant: mTenant,
-    //   uid: uid,
-    //   ip: ip,
-    // },
-  // }, true);
+  const {google} = require("googleapis");
+  const {tenant} = require("../../admin/hardCodeTenants");
+  const {howOften} = require("../../admin/utils");
+  const tenantX = await tenant(mTenant); // HARDCODE debe ser automático el tenant
+
+  // temporal
+  const task = {
+    extension: runData.extension,
+    itemId: runData.itemId,
+    payload: runData.payload,
+    pathDocumentStateEntity: runData.pathDocumentStateEntity,
+  };
+  const run = runData.run;
+
   // INIT Task values of large scope (all functions).
 
-//   const taskValues = {};
-//   taskValues.uid = uid;
-//   taskValues.ip = ip;
-//   const {PassThrough} = require("stream");
-//   const zipPassThrough = new PassThrough();
+  const taskValues = {};
+  taskValues.uid = uid;
+  taskValues.ip = ip;
+  const {PassThrough} = require("stream");
+  const zipPassThrough = new PassThrough();
+
+  await mergeInFirestore("/entities/CO-901318433/documents/response", {
+    message: "PASO?",
+    task: task,
+    run: `${JSON.stringify(run)}`,
+    mTenant: `${JSON.stringify(mTenant)}`,
+    uid: `${JSON.stringify(uid)}`,
+    ip: `${JSON.stringify(ip)}`,
+    zipPassThrough: `${JSON.stringify(zipPassThrough)}`,
+    tenantX: `${JSON.stringify(tenantX)}`,
+    //   // taskValues: `${JSON.stringify(taskValues)}`,
+  }, true);
+
+  if (howOften(task.itemId, "_") === 2) {
+    // itemId = ENTITY_TYPE_CONSECUTIVE
+
+    taskValues["itemId"] = task.itemId;
+    taskValues["itemIdArray"] = (task.itemId).split("_");
+    taskValues["entity"] = taskValues.itemIdArray[0];
+    taskValues["type"] = taskValues.itemIdArray[1];
+    taskValues["documentNumber"] = taskValues.itemIdArray[2];
+
+    // Store in folder based on document type (HARDCODE: tenant domain presets).
+    taskValues["documentId"] = taskValues.type + "_" + taskValues.documentNumber;
+    taskValues["parentFolder"] = tenantX.drive.type[taskValues.type];
+    taskValues["typeName"] = tenantX.drive.typeName[taskValues.type];
+    taskValues["parentFolderRef"] = `/entities/${taskValues.entity}/drive/${taskValues.parentFolder}`;
+    taskValues["gDriveRef"] = `/entities/${taskValues.entity}/drive/${taskValues.documentId}`; // Firestore - Google Drive Objects ID
+    taskValues["originRef"] = `/entities/${taskValues.entity}/${taskValues.parentFolder}/${taskValues.documentId}`;
+    taskValues["auditRef"] = taskValues.originRef;
+    await mergeInFirestore("/entities/CO-901318433/documents/response", {
+      taskValues: `${JSON.stringify(taskValues)}`,
+    }, true);
+  }
+
+  // extension
+  if (task.extension) {
+    taskValues["extension"] = (task.extension).toLowerCase();
+    taskValues["mimeType"] = extensionX[taskValues.extension];
+    taskValues["name"] = taskValues.documentNumber + "." + taskValues.extension;
+    const {cryptoX} = require("../../robot/cryptoX");
 
 
-//   if (howOften(task.itemId, "_") === 2) {
-//     // itemId = ENTITY_TYPE_CONSECUTIVE
-
-//     taskValues["itemId"] = task.itemId;
-//     taskValues["itemIdArray"] = (task.itemId).split("_");
-//     taskValues["entity"] = taskValues.itemIdArray[0];
-//     taskValues["type"] = taskValues.itemIdArray[1];
-//     taskValues["documentNumber"] = taskValues.itemIdArray[2];
-
-//     // Store in folder based on document type (HARDCODE: tenant domain presets).
-//     taskValues["documentId"] = taskValues.type + "_" + taskValues.documentNumber;
-//     taskValues["parentFolder"] = tenantX.drive.type[taskValues.type];
-//     taskValues["typeName"] = tenantX.drive.typeName[taskValues.type];
-//     taskValues["parentFolderRef"] = `/entities/${taskValues.entity}/drive/${taskValues.parentFolder}`;
-//     taskValues["gDriveRef"] = `/entities/${taskValues.entity}/drive/${taskValues.documentId}`; // Firestore - Google Drive Objects ID
-//     taskValues["originRef"] = `/entities/${taskValues.entity}/${taskValues.parentFolder}/${taskValues.documentId}`;
-//     taskValues["auditRef"] = taskValues.originRef;
-//     await mergeInFirestore("/entities/CO-901318433/documents/response", {
-//       task: `${JSON.stringify(task)}`,
-//       taskValues: `${JSON.stringify(taskValues)}`,
-//     }, true);
-//   }
-
-//   // extension
-//   if (task.extension) {
-//     taskValues["extension"] = (task.extension).toLowerCase();
-//     taskValues["mimeType"] = extensionX[taskValues.extension];
-//     taskValues["name"] = taskValues.documentNumber + "." + taskValues.extension;
-//     const {cryptoX} = require("../../robot/cryptoX");
+    switch (taskValues.extension) {
+    case "pdf":
+      if (tenantX.pdfControler === "jsPDF") {
+        taskValues["pdf"] = task.payload.split(",")[1];
+        taskValues["pdf"] = cryptoX("deco-base64-utf8", taskValues.pdf);
+        taskValues["payloadX"] = taskValues.pdf.deco;
+      }
+      break;
 
 
-//     switch (taskValues.extension) {
-//     case "pdf":
-//       if (tenantX.pdfControler === "jsPDF") {
-//         taskValues["pdf"] = task.payload.split(",")[1];
-//         taskValues["pdf"] = cryptoX("deco-base64-utf8", taskValues.pdf);
-//         taskValues["payloadX"] = taskValues.pdf.deco;
-//       }
-//       break;
+    case "xml": {
+      // Se entiende que solo se suben las respuestas válidas de la DIAN.
+      // taskValues["payloadX"] = task.payload;
+
+      const payload = await getOneDocument(`/entities/CO-901318433/documents/EB_FE24-56`);
+      taskValues["payloadX"] = payload.data.xmlResponseDeco;
+
+      // la colección f_xml_reception recibe y procesa el XML
+      await mergeInFirestore(`/ f_xml_reception/${taskValues.itemId}`, {dian: taskValues.payloadX || false});
+    }
+      break;
+
+    case "zip":
+      taskValues["payloadX"] = task.payload;
+      break;
 
 
-//     case "xml": {
-//       // Se entiende que solo se suben las respuestas válidas de la DIAN.
-//       // taskValues["payloadX"] = task.payload;
+    default:
+      return await Promise.reject(new Error(JSON.stringify({response: code.badRequest, callGroup: run, message: `${tenantX.pdfControler} no implementado para el tenent`})));
+    }
+    await mergeInFirestore("/entities/CO-901318433/documents/response", {
+      name: run,
+    }, true);
+  }
 
-//       const payload = await getOneDocument(`/entities/CO-901318433/documents/EB_FE24-56`);
-//       taskValues["payloadX"] = payload.data.xmlResponseDeco;
+  switch (run) {
+  case "initEntity":
+    // https://github.com/JovannyCO/FacturaDIAN-Hosting/wiki/runDrive#initentity
+    // taskValues["entityDrive"] = await getOneDocument(`/entities/${task}/drive/${task}`);
+    // // console.log(taskValues.entityDrive);
+    // if (taskValues.entityDrive.response === code.ok) {
+    //   return Promise.reject(new Error(JSON.stringify({response: code.badRequest})));
+    // } else {
+    //   return await authorize(credential, initEntity);
+    //   // return Promise.resolve(JSON.stringify({response: code.created}));
+    // }
+    break;
 
-//       // la colección f_xml_reception recibe y procesa el XML
-//       await mergeInFirestore(`/ f_xml_reception/${taskValues.itemId}`, {dian: taskValues.payloadX || false});
-//     }
-//       break;
+  case "createFolder":
+    // https://github.com/JovannyCO/FacturaDIAN-Hosting/wiki/runDrive#createfolder
+    // taskValues["getParentFolderId"] = await getOneDocument(taskValues.parentFolderRef);
+    // if (taskValues.getParentFolderId.response === code.ok) {
+    //   taskValues["parentFolderId"] = taskValues.getParentFolderId.data.id;
+    // } else {
+    //   return await Promise.reject(new Error(JSON.stringify({response: code.badRequest, callback: run, message: "Entidad no inicializada"})));
+    // }
 
-//     case "zip":
-//       taskValues["payloadX"] = task.payload;
-//       break;
+    // // Crear SubFolder
+    // taskValues["getItemFolderId"] = await getOneDocument(taskValues.gDriveRef);
+    // if (taskValues.getItemFolderId.response === code.ok) {
+    //   // return Promise.resolve({response: code.created});
 
+    //   // return await Promise.reject(new Error(JSON.stringify({response: code.badRequest, callback: run, message: "El folder ya existe"})));
+    //   // return await Promise.resolve(new Error(JSON.stringify({response: code.created, message: "El folder ya existe"})));
+    // } else {
+    //   await authorize(credential, createFolder);
+    //   // await createPermissions(taskValues.authX);
+    // }
 
-//     default:
-//       return await Promise.reject(new Error(JSON.stringify({response: code.badRequest, callGroup: run, message: `${tenantX.pdfControler} no implementado para el tenent`})));
-//     }
-//   }
+    // return Promise.resolve({response: code.created});
+    break;
 
-//   switch (run) {
-//   case "initEntity":
-//     // https://github.com/JovannyCO/FacturaDIAN-Hosting/wiki/runDrive#initentity
-//     taskValues["entityDrive"] = await getOneDocument(`/entities/${task}/drive/${task}`);
-//     // console.log(taskValues.entityDrive);
-//     if (taskValues.entityDrive.response === code.ok) {
-//       return Promise.reject(new Error(JSON.stringify({response: code.badRequest})));
-//     } else {
-//       return await authorize(credential, initEntity);
-//       // return Promise.resolve(JSON.stringify({response: code.created}));
-//     }
-//   case "createFolder":
-//     // https://github.com/JovannyCO/FacturaDIAN-Hosting/wiki/runDrive#createfolder
-//     taskValues["getParentFolderId"] = await getOneDocument(taskValues.parentFolderRef);
-//     if (taskValues.getParentFolderId.response === code.ok) {
-//       taskValues["parentFolderId"] = taskValues.getParentFolderId.data.id;
-//     } else {
-//       return await Promise.reject(new Error(JSON.stringify({response: code.badRequest, callback: run, message: "Entidad no inicializada"})));
-//     }
+  case "upLoadFile":
+    // console.log(taskValues.gDriveRef);
+    // taskValues["getParentFolderId"] = await getOneDocument(taskValues.gDriveRef);
+    // // console.log(taskValues.getParentFolderId);
 
-//     // Crear SubFolder
-//     taskValues["getItemFolderId"] = await getOneDocument(taskValues.gDriveRef);
-//     if (taskValues.getItemFolderId.response === code.ok) {
-//       // return Promise.resolve({response: code.created});
+    // if (taskValues.getParentFolderId.data.id) {
+    //   taskValues["id"] = taskValues.getParentFolderId.data.id;
+    // } else {
+    //   return await Promise.reject(new Error(JSON.stringify({
+    //     response: code.badRequest,
+    //     callback: run,
+    //     message: "No esta creado el folder " + taskValues.gDriveRef})));
+    // }
 
-//       // return await Promise.reject(new Error(JSON.stringify({response: code.badRequest, callback: run, message: "El folder ya existe"})));
-//       // return await Promise.resolve(new Error(JSON.stringify({response: code.created, message: "El folder ya existe"})));
-//     } else {
-//       await authorize(credential, createFolder);
-//       // await createPermissions(taskValues.authX);
-//     }
+    // await mergeInFirestore("/entities/CO-901318433/documents/response", {
+    //   taskValuesUpdate: `${JSON.stringify(taskValues)}`,
+    // }, true);
 
-//     return Promise.resolve({response: code.created});
+    // // await authorize(credential, createFile);
+    // // await createPermissions(taskValues.authX);
+    // return await Promise.resolve({response: code.created});
 
-//   case "upLoadFile":
-//     // console.log(taskValues.gDriveRef);
-//     taskValues["getParentFolderId"] = await getOneDocument(taskValues.gDriveRef);
-//     // console.log(taskValues.getParentFolderId);
+    break;
 
-//     if (taskValues.getParentFolderId.data.id) {
-//       taskValues["id"] = taskValues.getParentFolderId.data.id;
-//     } else {
-//       return await Promise.reject(new Error(JSON.stringify({
-//         response: code.badRequest,
-//         callback: run,
-//         message: "No esta creado el folder " + taskValues.gDriveRef})));
-//     }
-
-//     await authorize(credential, createFile);
-//     await createPermissions(taskValues.authX);
-//     return await Promise.resolve({response: code.created});
-
-
-//   case "processDIAN":
-//   // https://github.com/JovannyCO/FacturaDIAN-Hosting/wiki/runDrive#processdian
-//     /* console.log("¶¶§¶¶ espera...");
-//     await sleep(5000);
-//     console.log("¶¶§¶¶ espera 5 segundos");
-//     await sleep(5000);
-//     console.log("¶¶§¶¶ espera 10 segundos");
-//     await sleep(5000);
-//     console.log("¶¶§¶¶ espera 15 segundos");
-//     await sleep(5000);
-//     console.log("¶¶§¶¶ espera 20 segundos ¡Acción!"); */
-
-//     await mergeInFirestore("/entities/CO-901318433/documents/response", {data: `${JSON.stringify(taskValues)}`}, true);
-
-//     taskValues["getParentFolderId"] = await getOneDocument(taskValues.gDriveRef);
+  case "processDIAN": {
+  // https://github.com/JovannyCO/FacturaDIAN-Hosting/wiki/runDrive#processdian
+    /* console.log("¶¶§¶¶ espera...");
+    await sleep(5000);
+    console.log("¶¶§¶¶ espera 5 segundos");
+    await sleep(5000);
+    console.log("¶¶§¶¶ espera 10 segundos");
+    await sleep(5000);
+    console.log("¶¶§¶¶ espera 15 segundos");
+    await sleep(5000);
+    console.log("¶¶§¶¶ espera 20 segundos ¡Acción!"); */
 
 
-//     if (taskValues.getParentFolderId.data.id) {
-//       await mergeInFirestore(taskValues.gDriveRef, {
-//         stateError: `Si esta creado el folder ${taskValues.gDriveRef}`,
-//       }, true);
+    taskValues["getParentFolderId"] = await getOneDocument(taskValues.gDriveRef);
+    await mergeInFirestore("/entities/CO-901318433/documents/response", {dataA: `${JSON.stringify(taskValues.getParentFolderId.data.id)}`}, true);
 
-//       taskValues["id"] = taskValues.getParentFolderId.data.id;
-//     } else {
-//       await mergeInFirestore(taskValues.gDriveRef, {
-//         stateError: `No esta creado el folder ${taskValues.gDriveRef}`,
-//       }, true);
+    if (taskValues.getParentFolderId.data.id) {
+      taskValues["id"] = taskValues.getParentFolderId.data.id;
+      await mergeInFirestore("/entities/CO-901318433/documents/response1", {
+        stateError: taskValues,
+        idd: taskValues.id,
+        // auth: auth,
+      }, true);
+    } else {
+      await mergeInFirestore("/entities/CO-901318433/documents/response", {
+        stateError: `No esta creado el folder ${taskValues.gDriveRef}`,
+      }, true);
 
-//       return await Promise.reject(new Error(JSON.stringify({
-//         response: code.badRequest,
-//         callback: run,
-//         message: "No esta creado el folder " + taskValues.gDriveRef})));
-//     }
+      return await Promise.reject(new Error(JSON.stringify({
+        response: code.badRequest,
+        callback: run,
+        message: "No esta creado el folder " + taskValues.gDriveRef})));
+    }
 
-//     await authorize(credential, createFile);
-//     // await authorize(credential, createPermissions);
-//     await createPermissions(taskValues.authX);
+    // const result = await authorize(credential, createFile);
+    const result = createFile();// AQUI QUEDAMOS
 
+    await mergeInFirestore("/entities/CO-901318433/documents/response1", {
+      resultAuthoriza: `${result}`,
+    }, true);
 
-//     taskValues["thisItem"] = await getOneDocument(taskValues.gDriveRef);
+    // // await authorize(credential, createPermissions);
+    // await createPermissions(taskValues.authX);
 
-//     if (
-//       taskValues.thisItem.data.xmlId && // {true} XML in Drive
-//       taskValues.thisItem.data.pdfId && // {true} PDF in Drive
-//       !taskValues.thisItem.data.zipId // {false} ZIP NOT in Drive
-//     ) {
-//       // await authorize(credential, createZip);
+    // taskValues["thisItem"] = await getOneDocument(taskValues.gDriveRef);
 
+    // await mergeInFirestore("/entities/CO-901318433/documents/response", {
+    //   taskValuesData: `${JSON.stringify(taskValues.thisItem.data)}`,
+    // }, true);
 
-//       await createZip(taskValues.authX);
-
-//       await createFile(
-//         taskValues.authX,
-//         taskValues.id,
-//         taskValues.duplaNameZip,
-//         extensionX.zip,
-//         zipPassThrough,
-//         (taskValues.gDriveRef),
-//         (taskValues.originRef),
-//         "zip",
-//       );
-
-//       // await authorize(credential, createPermissions);
-//       await createPermissions(taskValues.authX);
-
-//       await sendEmailZip();
-//     }
+    // if (
+    //   taskValues.thisItem.data.xmlId && // {true} XML in Drive
+    //   taskValues.thisItem.data.pdfId && // {true} PDF in Drive
+    //   !taskValues.thisItem.data.zipId // {false} ZIP NOT in Drive
+    // ) {
+    //   // await authorize(credential, createZip);
 
 
-//     return await Promise.resolve({response: code.created});
+    //   await createZip(taskValues.authX);
 
+    //   await createFile(
+    //     taskValues.authX,
+    //     taskValues.id,
+    //     taskValues.duplaNameZip,
+    //     extensionX.zip,
+    //     zipPassThrough,
+    //     (taskValues.gDriveRef),
+    //     (taskValues.originRef),
+    //     "zip",
+    //   );
 
-//   default:
-//     return await Promise.reject(new Error(JSON.stringify({runDrive: code.badRequest, callback: run})));
-//   }
+    //   // await authorize(credential, createPermissions);
+    //   await createPermissions(taskValues.authX);
+
+    //   await sendEmailZip();
+    // }
+    // return await Promise.resolve({response: code.created});
+  }
+    break;
+
+  default:
+    return await Promise.reject(new Error(JSON.stringify({runDrive: code.badRequest, callback: run})));
+  }
 
 
 //   /**
@@ -328,105 +347,109 @@ module.exports = async (
 //   }
 
 
-//   /**
-//   * Create folder by item (document).
-//   * https://github.com/JovannyCO/FacturaDIAN-Hosting/wiki/runDrive#createfile
-//   * @param {google.auth.OAuth2} auth An authorized OAuth2 client.
-//   * @param {string} id or attachmentFolderId.
-//   * @param {string} name documentId.
-//   * @param {string} mimeType of file.
-//   * @param {string} payloadX processed payload.
-//   * @param {string} gDriveRef path to firestore Google Drive Objects ID
-//   * @param {string} originRef path to firestore origin document.
-//   * @param {string} extension of file.
-//   */
-//   async function createFile(auth,
-//     id = taskValues.id,
-//     name = taskValues.name,
-//     mimeType = taskValues.mimeType,
-//     payloadX = taskValues.payloadX,
-//     gDriveRef = taskValues.gDriveRef,
-//     originRef = taskValues.originRef,
-//     extension = taskValues.extension,
-//   ) {
-//     return new Promise((resolve, reject) => {
-//       try {
-//         const drive = google.drive({version: "v3", auth});
+  /**
+  * Create folder by item (document).
+  * https://github.com/JovannyCO/FacturaDIAN-Hosting/wiki/runDrive#createfile
+  * @param {google.auth.OAuth2} auth An authorized OAuth2 client.
+  * @param {string} id or attachmentFolderId.
+  * @param {string} name documentId.
+  * @param {string} mimeType of file.
+  * @param {string} payloadX processed payload.
+  * @param {string} gDriveRef path to firestore Google Drive Objects ID
+  * @param {string} originRef path to firestore origin document.
+  * @param {string} extension of file.
+  */
+  async function createFile(auth,
+    id = taskValues.id,
+    name = taskValues.name,
+    mimeType = taskValues.mimeType,
+    payloadX = taskValues.payloadX,
+    gDriveRef = taskValues.gDriveRef,
+    originRef = taskValues.originRef,
+    extension = taskValues.extension,
+  ) {
+    return new Promise((resolve, reject) => {
+      try {
+        const drive = google.drive({version: "v3", auth});
 
-//         const resource = {
-//           name: name,
-//           parents: [id],
-//           mimeType: mimeType,
-//         };
-
-
-//         const media = {
-//           body: payloadX,
-//           mimeType: mimeType,
-//         };
-
-//         drive.files.create({resource: resource, media: media, fields: "id, webViewLink"},
-//           async (err, createItem) => {
-//             if (err) {
-//               console.error(err);
-//               return await Promise.reject(new Error(JSON.stringify({response: code.badRequest, code: err.name})));
-//             } else {
-//               taskValues["fileId"] = createItem.data.id;
-
-//               const {addArray, dbRT, timeStampRealTimeX, incrementRealTimeX} = require("../../admin");
-//               const toWrite = dbRT.ref(taskValues.auditRef);
+        const resource = {
+          name: name,
+          parents: [id],
+          mimeType: mimeType,
+        };
 
 
-//               await mergeInFirestore(gDriveRef, {
-//                 [extension + "Id"]: taskValues.fileId,
-//                 audit: addArray(`${taskValues.auditRef}${taskValues.fileId}`),
-//               }, true);
+        const media = {
+          body: payloadX,
+          mimeType: mimeType,
+        };
 
-//               taskValues["uriX"] = extension.toLowerCase();
-//               taskValues[taskValues.uriX + "_download"] = `https://drive.google.com/uc?id=${taskValues.fileId}`;
-//               taskValues[taskValues.uriX + "_webViewLink"] = createItem.data.webViewLink;
+        drive.files.create({resource: resource, media: media, fields: "id, webViewLink"},
+          async (err, createItem) => {
+            if (err) {
+              console.error(err);
+              return await Promise.reject(new Error(JSON.stringify({response: code.badRequest, code: err.name})));
+            } else {
+              taskValues["fileId"] = createItem.data.id;
 
-
-//               await toWrite.update({
-//                 files: incrementRealTimeX(1),
-//                 last: [{[name.replace(".", "_")]: taskValues.fileId}],
-//                 [taskValues.fileId]: {
-//                   parentId: id,
-//                   name: name,
-//                   itemId: task.itemId,
-//                   uid: taskValues.uid,
-//                   originRef: originRef,
-//                   ip: taskValues.ip.text,
-//                   timestamp: timeStampRealTimeX,
-//                   extension: extension,
-//                   [extension + "Id"]: taskValues.fileId,
-//                   link: taskValues[taskValues.uriX + "_webViewLink"],
-//                 },
-//               });
+              const {addArray, dbRT, timeStampRealTimeX, incrementRealTimeX} = require("../../admin");
+              const toWrite = dbRT.ref(taskValues.auditRef);
 
 
-//               if (extension === "zip") {
-//                 await mergeInFirestore(originRef, {
-//                   uri: {
-//                     [taskValues.uriX]: taskValues[taskValues.uriX + "_download"],
-//                   },
-//                 }, true);
-//               } else {
-//                 await mergeInFirestore(originRef, {
-//                   uri: {
-//                     [taskValues.uriX]: taskValues[taskValues.uriX + "_webViewLink"],
-//                   },
-//                 }, true);
-//               }
-//             }
-//             return resolve();
-//           },
-//         );
-//       } catch (error) {
-//         reject(new Error(JSON.stringify(error)));
-//       }
-//     });
-//   }
+              await mergeInFirestore(gDriveRef, {
+                [extension + "Id"]: taskValues.fileId,
+                audit: addArray(`${taskValues.auditRef}${taskValues.fileId}`),
+              }, true);
+
+              taskValues["uriX"] = extension.toLowerCase();
+              taskValues[taskValues.uriX + "_download"] = `https://drive.google.com/uc?id=${taskValues.fileId}`;
+              taskValues[taskValues.uriX + "_webViewLink"] = createItem.data.webViewLink;
+
+
+              await toWrite.update({
+                files: incrementRealTimeX(1),
+                last: [{[name.replace(".", "_")]: taskValues.fileId}],
+                [taskValues.fileId]: {
+                  parentId: id,
+                  name: name,
+                  itemId: task.itemId,
+                  uid: taskValues.uid,
+                  originRef: originRef,
+                  ip: taskValues.ip.text,
+                  timestamp: timeStampRealTimeX,
+                  extension: extension,
+                  [extension + "Id"]: taskValues.fileId,
+                  link: taskValues[taskValues.uriX + "_webViewLink"],
+                },
+              });
+
+
+              if (extension === "zip") {
+                await mergeInFirestore(originRef, {
+                  uri: {
+                    [taskValues.uriX]: taskValues[taskValues.uriX + "_download"],
+                  },
+                }, true);
+              } else {
+                await mergeInFirestore(originRef, {
+                  uri: {
+                    [taskValues.uriX]: taskValues[taskValues.uriX + "_webViewLink"],
+                  },
+                }, true);
+              }
+            }
+            return resolve();
+          },
+        );
+      } catch (error) {
+        mergeInFirestore("/entities/CO-901318433/documents/response", {
+          errorCreateFile: `${error}`,
+        }, true);
+
+        reject(new Error(JSON.stringify(error)));
+      }
+    });
+  }
 
 
 //   /**
@@ -584,91 +607,90 @@ module.exports = async (
 //   * @param {string} payloadX processed payload.
 //   */
 //   async function createZip(auth,
-  //   name = taskValues.name,
-  //   payloadX = taskValues.payloadX,
-  // ) {
-  //   return new Promise((resolve, reject) => {
-  //     try {
-  //       const drive = google.drive({version: "v3", auth});
+//     name = taskValues.name,
+//     payloadX = taskValues.payloadX,
+//   ) {
+//     return new Promise((resolve, reject) => {
+//       try {
+//         const drive = google.drive({version: "v3", auth});
 
 
-  //       // COMPRIMIR ZIP si la dupla existe
+//         // COMPRIMIR ZIP si la dupla existe
 
-  //       switch (taskValues.extension) {
-  //       case "pdf":
-  //         taskValues["duplaId"] = taskValues.thisItem.data.xmlId;
-  //         taskValues["duplaName"] = name.replace(taskValues.extension, "xml");
-  //         break;
-
-
-  //       case "xml":
-  //         taskValues["duplaId"] = taskValues.thisItem.data.pdfId;
-  //         taskValues["duplaName"] = name.replace(taskValues.extension, "pdf");
-  //         break;
+//         switch (taskValues.extension) {
+//         case "pdf":
+//           taskValues["duplaId"] = taskValues.thisItem.data.xmlId;
+//           taskValues["duplaName"] = name.replace(taskValues.extension, "xml");
+//           break;
 
 
-  //       default:
-  //         console.log(emoji.fire, taskValues.extension);
-  //         resolve();
-  //       }
+//         case "xml":
+//           taskValues["duplaId"] = taskValues.thisItem.data.pdfId;
+//           taskValues["duplaName"] = name.replace(taskValues.extension, "pdf");
+//           break;
 
 
-  //       taskValues["garbageMergeInFirestore"] = async function() {
-  //         // console.log("¶¶ CREA zipId: true en garbageMergeInFirestore");
-  //         return await mergeInFirestore(taskValues.gDriveRef, {
-  //           zipId: true,
-  //         }, true);
-  //       };
+//         default:
+//           console.log(emoji.fire, taskValues.extension);
+//           resolve();
+//         }
 
 
-  //       taskValues["duplaNameZip"] = name.replace(taskValues.extension, "zip");
+//         taskValues["garbageMergeInFirestore"] = async function() {
+//           // console.log("¶¶ CREA zipId: true en garbageMergeInFirestore");
+//           return await mergeInFirestore(taskValues.gDriveRef, {
+//             zipId: true,
+//           }, true);
+//         };
 
 
-  //       drive.files.get({fileId: taskValues.duplaId, alt: "media"}, {responseType: "stream"},
-  //         async (err, {data}) => {
-  //           if (err) {
-  //             Promise.reject(new Error("The API returned an error: " + err));
-  //           }
-  //           // const dataUrl = `data:${data.headers["Content-Type"]};base64,${btoa(data.body)}`;
-  //           const buf = [];
-  //           data.on("data", (e) => {
-  //             buf.push(e);
-  //           });
+//         taskValues["duplaNameZip"] = name.replace(taskValues.extension, "zip");
 
-  //           data.on("end", async () => {
-  //             const duplaBuffer = Buffer.concat(buf);
 
-  //             const archiver = require("archiver");
-  //             const archive = archiver("zip", {
-  //               zlib: {level: 9}, // Sets the compression level.
-  //             });
+//         drive.files.get({fileId: taskValues.duplaId, alt: "media"}, {responseType: "stream"},
+//           async (err, {data}) => {
+//             if (err) {
+//               Promise.reject(new Error("The API returned an error: " + err));
+//             }
+//             // const dataUrl = `data:${data.headers["Content-Type"]};base64,${btoa(data.body)}`;
+//             const buf = [];
+//             data.on("data", (e) => {
+//               buf.push(e);
+//             });
 
-  //             archive.append(payloadX, {name: name});
-  //             archive.append(duplaBuffer, {name: taskValues.duplaName});
+//             data.on("end", async () => {
+//               const duplaBuffer = Buffer.concat(buf);
 
-  //             archive.on("error", (err) => {
-  //               throw err;
-  //             });
+//               const archiver = require("archiver");
+//               const archive = archiver("zip", {
+//                 zlib: {level: 9}, // Sets the compression level.
+//               });
 
-  //             archive.pipe(zipPassThrough);
-  //             archive.finalize();
+//               archive.append(payloadX, {name: name});
+//               archive.append(duplaBuffer, {name: taskValues.duplaName});
 
-  //             taskValues["zipState"] = "¶¶ sipOK";
+//               archive.on("error", (err) => {
+//                 throw err;
+//               });
 
-  //             // taskValues["zipPassThrough"] = zipPassThrough;
+//               archive.pipe(zipPassThrough);
+//               archive.finalize();
 
-  //             return await Promise.resolve();
-  //           });
-  //           return await Promise.resolve();
-  //         });
+//               taskValues["zipState"] = "¶¶ sipOK";
 
-  //       return resolve();
-  //     } catch (error) {
-  //       return reject(error);
-  //     }
-  //   });
-  // }
+//               // taskValues["zipPassThrough"] = zipPassThrough;
+
+//               return await Promise.resolve();
+//             });
+//             return await Promise.resolve();
+//           });
+
+//         return resolve();
+//       } catch (error) {
+//         return reject(error);
+//       }
+//     });
+//   }
 };
-
 
 // module.exports = {runDrive};
