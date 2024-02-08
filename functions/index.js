@@ -32,7 +32,13 @@ exports.xmlGenerator = functions.runWith(gb4).firestore
     .document("/ b_xml_parse/{dataPath}")
     .onCreate(require("./src/triggers/bXmlGeneratorOnCreate"));
 
-exports.xmlSign = functions.runWith(gb4).firestore
+exports.xmlSign = functions.runWith({
+  timeoutSeconds: 540,
+  memory: "4GB",
+  minInstances: 0,
+  maxInstances: 10,
+  enforceAppCheck: true, // Enable App Check protection.
+}).firestore
     .document("/ c_xml_sign/{dataPath}")
     .onCreate(require("./src/triggers/cXmlSignOnCreate"));
 
@@ -70,16 +76,25 @@ exports.onUpdateEntitiesAuth = functions.firestore
 
 
 // exports.tf = functions.runWith(gb4).https.onCall(require("./robot"));
-exports.tf = functions.runWith(gb4).https.onCall(require("./src/robot"));
+exports.tf = functions.runWith({
+  timeoutSeconds: 540,
+  memory: "4GB",
+  minInstances: 0,
+  maxInstances: 10,
+  enforceAppCheck: true, // Enable App Check protection.
+}).https.onCall(require("./src/robot"));
 
 // test
-exports.driveTest = functions.runWith(gb4).https.onCall(require("./src/google/drive"));
 // exports.driveTest = functions.runWith(gb4).https.onCall(require("./src/google/drive"));
-
-exports.driveTest1 = functions.firestore
-    .document("/entities/CO-901318433/documents/test")
-    .onUpdate(require("./src/google/drive"));
-// /home/tufactura/BackEnd/functions/src/google/drive/index.js
+exports.driveTest = functions.runWith( {
+  timeoutSeconds: 540,
+  memory: "4GB",
+  minInstances: 0,
+  maxInstances: 10,
+  enforceAppCheck: true, // Enable App Check protection.
+}).https.onCall(require("./src/google/drive"));
+exports.authorizeDriveTest = functions.runWith(gb4).https.onCall(require("./src/google/drive/authorizeTest"));
+// exports.driveTest = functions.runWith(gb4).https.onCall(require("./src/google/drive"));
 
 
 // Middleware v0

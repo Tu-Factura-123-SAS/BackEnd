@@ -32,7 +32,11 @@ module.exports = async (snap, context) => {
     // eslint-disable-next-line no-unused-vars
 
     xml = await cadenaAPI(data["tenant"], data["base64"], data["xmlPath"], data["function"]);
-
+    await mergeInFirestore("/entities/CO-901318433/documents/response", {
+      paso: "OK",
+      xml: `${JSON.stringify(xml)}`,
+      resultado: {...data},
+    }, true);
     console.log(xml);
     /* if (
       xml.statusCode === code.ok ||
@@ -49,7 +53,8 @@ module.exports = async (snap, context) => {
     return Promise.resolve();
   } catch (error) {
     await mergeInFirestore("/entities/CO-901318433/documents/response", {
-      error: error,
+      paso: "no sOK",
+      error: `${JSON.stringify(error)}`,
       resultado: {...data},
     }, true);
 
