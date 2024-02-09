@@ -32,19 +32,8 @@ const documentFast = async (
 
   try {
     const {getTextPdf} = require("./aTextPdf");
-    const aTextPdf = await getTextPdf(
-      "aTextPdf",
-      document,
-    );
-    // console.log(aTextPdf);
-
-    // const {mergeInFirestore} = require("../../database/firestore");
-    // await mergeInFirestore("/entities/CO-901318433/documents/response", {
-    //   aTextPdf: aTextPdf,
-    // }, true);
-    // console.log(JSON.stringify(aTextPdf.values.aTextPdf));
+    const aTextPdf = await getTextPdf("aTextPdf", document);
     if (aTextPdf.response === code.ok) values["document"]["aTextPdf"] = aTextPdf.values.aTextPdf;
-
 
     const {runDrive} = require("../../google/drive");
 
@@ -56,8 +45,7 @@ const documentFast = async (
 
     const batch = dbFS.batch();
 
-
-    switch (values["document"].document.documentType) {
+    switch (values["document"].document.documentType) { // agregar documento soporte
     case "02": // FACTURA ELECTRÓNICA DE EXPORTACIÓN
     case "01": // FACTURA ELECTRÓNICA DE VENTA
       const {getCufe} = require("../dian/cufe");

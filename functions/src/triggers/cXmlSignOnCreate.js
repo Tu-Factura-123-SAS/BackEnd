@@ -1,11 +1,6 @@
 module.exports = async (snap, context) => {
   const dataPath = context.params.dataPath;
-  const {mergeInFirestore} = require("../database/firestore");
-  await mergeInFirestore("/entities/CO-901318433/documents/response", {
-    stateResponse: "antes  a funcion",
-    snap: snap.data(),
-  }, true);
-
+  // const {mergeInFirestore} = require("../database/firestore");
   // const {dbFS} = require("../admin");
   // const {code} = require("../admin/responses");
   const {cadenaAPI} = require("../robot/dian/cadena/api");
@@ -24,20 +19,13 @@ module.exports = async (snap, context) => {
     // return await Promise.reject(new Error(`LOCALHOST UNAUTHORIZED cXmlSignOnCreate  function: ${data["function"]}  document: ${dataPath}`));
   }
 
+  /* eslint-disable no-unused-vars */
   let xml = {};
   // const task = ();
 
 
   try {
-    // eslint-disable-next-line no-unused-vars
-
     xml = await cadenaAPI(data["tenant"], data["base64"], data["xmlPath"], data["function"]);
-    await mergeInFirestore("/entities/CO-901318433/documents/response", {
-      paso: "OK",
-      xml: `${JSON.stringify(xml)}`,
-      resultado: {...data},
-    }, true);
-    console.log(xml);
     /* if (
       xml.statusCode === code.ok ||
       xml.errorMessage === "Batch en proceso de validación."
@@ -52,12 +40,6 @@ module.exports = async (snap, context) => {
     } */
     return Promise.resolve();
   } catch (error) {
-    await mergeInFirestore("/entities/CO-901318433/documents/response", {
-      paso: "no sOK",
-      error: `${JSON.stringify(error)}`,
-      resultado: {...data},
-    }, true);
-
     return Promise.reject(new Error(`TRY FAIL cXmlSignOnCreate  function: ${cadenaMessage} ${error.message}`));
   }
 };

@@ -175,19 +175,12 @@ const cadenaAPI = async (
 
       if (uuid) {
         const {runDrive} = require("../../../google/drive");
-        await mergeInFirestore(pathDocumentSign, {
-          itemId: itemId,
-          prueba: "AHHH",
-          xmlResponseDeco: xmlResponse.deco,
-          pathDocumentStateEntity: pathDocumentStateEntity,
-        }, true);
         await runDrive("processDIAN",
         {
           "extension": "xml",
           "itemId": itemId,
           "payload": xmlResponse.deco,
         },
-        // pathDocumentStateEntity,
         );
       }
     }

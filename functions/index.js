@@ -86,15 +86,14 @@ exports.tf = functions.runWith({
 
 // test
 // exports.driveTest = functions.runWith(gb4).https.onCall(require("./src/google/drive"));
-exports.driveTest = functions.runWith( {
-  timeoutSeconds: 540,
-  memory: "4GB",
-  minInstances: 0,
-  maxInstances: 10,
-  enforceAppCheck: true, // Enable App Check protection.
-}).https.onCall(require("./src/google/drive"));
-exports.authorizeDriveTest = functions.runWith(gb4).https.onCall(require("./src/google/drive/authorizeTest"));
-// exports.driveTest = functions.runWith(gb4).https.onCall(require("./src/google/drive"));
+// exports.driveTest = functions.runWith( {
+//   timeoutSeconds: 540,
+//   memory: "4GB",
+//   minInstances: 0,
+//   maxInstances: 10,
+//   enforceAppCheck: true, // Enable App Check protection.
+// }).https.onCall(require("./src/google/drive"));
+// exports.authorizeDriveTest = functions.runWith(gb4).https.onCall(require("./src/google/drive/authorizeTest"));
 
 
 // Middleware v0
