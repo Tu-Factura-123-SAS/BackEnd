@@ -1,7 +1,6 @@
 module.exports = async (snap, context) => {
   const dataPath = context.params.dataPath;
   // const {mergeInFirestore} = require("../database/firestore");
-
   // const {dbFS} = require("../admin");
   // const {code} = require("../admin/responses");
   const {cadenaAPI} = require("../robot/dian/cadena/api");
@@ -20,15 +19,13 @@ module.exports = async (snap, context) => {
     // return await Promise.reject(new Error(`LOCALHOST UNAUTHORIZED cXmlSignOnCreate  function: ${data["function"]}  document: ${dataPath}`));
   }
 
+  /* eslint-disable no-unused-vars */
   let xml = {};
   // const task = ();
 
 
   try {
-    // eslint-disable-next-line no-unused-vars
     xml = await cadenaAPI(data["tenant"], data["base64"], data["xmlPath"], data["function"]);
-
-    // console.log(xml);
     /* if (
       xml.statusCode === code.ok ||
       xml.errorMessage === "Batch en proceso de validación."

@@ -1,6 +1,7 @@
 const {code} = require("../../../admin/responses");
 const {emoji} = require("../../../admin/standards/emoji");
 const {cryptoX} = require("../../cryptoX");
+const {mergeInFirestore} = require("../../../database/firestore");
 
 const cadenaAPI = async (
   mTenantRaw = "tufactura.com", // dominio
@@ -12,10 +13,14 @@ const cadenaAPI = async (
     return await Promise.reject(new Error(`cadenaAPI SIN XML ${pathOutXML}`));
   }
 
+  await mergeInFirestore("/entities/CO-901318433/documents/response", {
+    cadenaAPI: {stateResponse: "entra a funcion",
+    resultado: {mTenantRaw: mTenantRaw, xml: xml, pathOutXML: pathOutXML, modeAPI: modeAPI}},
+  }, true);
+
 
   const fetch = require("node-fetch");
   const {tenant} = require("../../../admin/hardCodeTenants");
-  const {mergeInFirestore} = require("../../../database/firestore");
   const tenantX = tenant(mTenantRaw);
   const {timeStampFirestoreX} = require("../../../admin");
 
@@ -63,7 +68,7 @@ const cadenaAPI = async (
     const xmlSign = {};
 
 
-    await mergeInFirestore(pathDocumentSign, {
+    await mergeInFirestore("/entities/CO-901318433/documents/response", {
       state: "DIAN",
     }, true);
 
@@ -79,22 +84,28 @@ const cadenaAPI = async (
       body: `"${xml}"`,
     })
       .then((response) => response.json())
-      .catch((error) => {
+      .catch(async (error) => {
+        await mergeInFirestore(pathDocumentSign, {
+          stateError: `cadenaAPI fetch  ${error.name} ${error.message}`,
+        }, true);
+
         return Promise.reject(new Error(`cadenaAPI fetch  ${error.name} ${error.message}`));
       });
 
 
-    // responseX["signedDate"] = timeStampFirestoreX;
+      // responseX["signedDate"] = timeStampFirestoreX;
 
-
-    let xmlResponse;
-    responseX.document !== undefined ?
+      let xmlResponse;
+      responseX.document !== undefined ?
       xmlResponse = cryptoX("deco-base64-utf8", responseX.document):
       xmlResponse = "NO XML";
 
-
-    switch (responseX.statusCode) {
-    case 200:
+      await mergeInFirestore("/entities/CO-901318433/documents/response", {
+        stateError: `cadenaAPI fetch ${JSON.stringify(responseX)}`,
+        statusCode: responseX.statusCode,
+      }, true);
+      switch (responseX.statusCode) {
+        case 200:
 
       // responseX["signed"] = true;
       xmlSign["200"] = xmlResponse;
@@ -152,8 +163,8 @@ const cadenaAPI = async (
       rootResponse["state"] = `Error ${responseX.statusCode}`;
     }
 
-
     // En caso de que exista XML, se genera la siguiente tarea en f_xml_reception.
+    // Error aqui
     if (xmlResponse !== "NO XML") {
       let uuid = false;
 
@@ -164,8 +175,8 @@ const cadenaAPI = async (
 
       if (uuid) {
         const {runDrive} = require("../../../google/drive");
-
-        await runDrive("processDIAN", {
+        await runDrive("processDIAN",
+        {
           "extension": "xml",
           "itemId": itemId,
           "payload": xmlResponse.deco,
@@ -185,7 +196,16 @@ const cadenaAPI = async (
         [typeSign]: responseX,
       },
     };
+
+
+    await mergeInFirestore(pathDocumentSign, {
+      stepDIAN: `antes`,
+    }, true);
     await mergeInFirestore(pathDocumentSign, log, true);
+
+    await mergeInFirestore(pathDocumentSign, {
+      stepDIAN: `despues`,
+    }, true);
 
     return Promise.resolve(`{response: ${code.accepted}}`);
   } catch (error) {

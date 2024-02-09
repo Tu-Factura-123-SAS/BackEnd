@@ -536,6 +536,32 @@ setCude:
         );
       }
 
+
+// test
+
+      /*
+{
+"call":"get",
+"callGroup":"runDriveTest",
+"extension":"cadena de texto con {{RULE}}",
+"data": {"RULE": "xPath"}
+} */
+
+if (dataX("callGroup") === "runDriveTest") {
+  // console.log(JSON.parse(dataX("template").dataX("data")));
+  // return await Promise.reject(new Error(dataX("run")));
+  const {runDrive} = require("../google/drive");
+
+  responseRobot["runDrive"] = await runDrive({
+    run: dataX("run"),
+    extension: dataX("extension"),
+    itemId: dataX("itemId"),
+    payload: dataX("payload"),
+    pathDocumentStateEntity: dataX("pathDocumentStateEntity"),
+  },
+  );
+}
+
       /*
 {
 "call":"get",

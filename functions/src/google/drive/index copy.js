@@ -7,18 +7,32 @@ const {getOneDocument} = require("../../database/firestore");
 const {mergeInFirestore} = require("../../database/firestore");
 
 
-const runDrive = async (
-  run,
-  task,
-  mTenant = "tufactura.com",
-  uid = "SYSTEM",
-  ip = "127.0.0.1",
+module.exports = async (
+  // const runDrive = async (
+  runData, // run
+  // task,
+  // test = "",
+  // mTenant = "tufactura.com",
+  // uid = "SYSTEM",
+  // ip = "127.0.0.1",
   ) => {
+    const mTenant = "tufactura.com";
+    const uid = "SYSTEM";
+    const ip = "127.0.0.1";
   // https://github.com/JovannyCO/FacturaDIAN-Hosting/wiki/runDrive#rundrive
   const {google} = require("googleapis");
   const {tenant} = require("../../admin/hardCodeTenants");
   const {howOften} = require("../../admin/utils");
-  const tenantX = tenant(mTenant); // HARDCODE debe ser automático el tenant
+  const tenantX = await tenant(mTenant); // HARDCODE debe ser automático el tenant
+
+  // temporal
+  const task = {
+    extension: runData.extension,
+    itemId: runData.itemId,
+    payload: runData.payload,
+    pathDocumentStateEntity: runData.pathDocumentStateEntity,
+  };
+  const run = runData.run;
 
   // INIT Task values of large scope (all functions).
 
@@ -45,6 +59,9 @@ const runDrive = async (
     taskValues["gDriveRef"] = `/entities/${taskValues.entity}/drive/${taskValues.documentId}`; // Firestore - Google Drive Objects ID
     taskValues["originRef"] = `/entities/${taskValues.entity}/${taskValues.parentFolder}/${taskValues.documentId}`;
     taskValues["auditRef"] = taskValues.originRef;
+    // await mergeInFirestore("/entities/CO-901318433/documents/response", {
+    //   taskValues: `${JSON.stringify(taskValues)}`,
+    // }, true);
   }
 
   // extension
@@ -67,78 +84,91 @@ const runDrive = async (
 
     case "xml": {
       // Se entiende que solo se suben las respuestas válidas de la DIAN.
-      taskValues["payloadX"] = task.payload;
+      // taskValues["payloadX"] = task.payload;
+
+      const payload = await getOneDocument(`/entities/CO-901318433/documents/EB_FE24-57`);
+      taskValues["payloadX"] = payload.data.xmlResponseDeco;
+
       // la colección f_xml_reception recibe y procesa el XML
       await mergeInFirestore(`/ f_xml_reception/${taskValues.itemId}`, {dian: taskValues.payloadX || false});
     }
       break;
 
     case "zip": {
-      taskValues["payloadX"] = task.payload;
+      // taskValues["payloadX"] = task.payload;
+      const payload = await getOneDocument(`/entities/CO-901318433/documents/EB_FE24-57`);
+      taskValues["payloadX"] = payload.data.xmlResponseDeco;
       break;
     }
 
     default:
       return await Promise.reject(new Error(JSON.stringify({response: code.badRequest, callGroup: run, message: `${tenantX.pdfControler} no implementado para el tenent`})));
     }
+    // await mergeInFirestore("/entities/CO-901318433/documents/response", {
+    //   name: run,
+    // }, true);
   }
 
   switch (run) {
   case "initEntity":
     // https://github.com/JovannyCO/FacturaDIAN-Hosting/wiki/runDrive#initentity
-    taskValues["entityDrive"] = await getOneDocument(`/entities/${task}/drive/${task}`);
+    // taskValues["entityDrive"] = await getOneDocument(`/entities/${task}/drive/${task}`);
     // // console.log(taskValues.entityDrive);
-    if (taskValues.entityDrive.response === code.ok) {
-      return Promise.reject(new Error(JSON.stringify({response: code.badRequest})));
-    } else {
-      return await authorize(credential, initEntity);
-      // return Promise.resolve(JSON.stringify({response: code.created}));
-    }
+    // if (taskValues.entityDrive.response === code.ok) {
+    //   return Promise.reject(new Error(JSON.stringify({response: code.badRequest})));
+    // } else {
+    //   return await authorize(credential, initEntity);
+    //   // return Promise.resolve(JSON.stringify({response: code.created}));
+    // }
+    break;
 
   case "createFolder":
     // https://github.com/JovannyCO/FacturaDIAN-Hosting/wiki/runDrive#createfolder
-    taskValues["getParentFolderId"] = await getOneDocument(taskValues.parentFolderRef);
-    if (taskValues.getParentFolderId.response === code.ok) {
-      taskValues["parentFolderId"] = taskValues.getParentFolderId.data.id;
-    } else {
-      return await Promise.reject(new Error(JSON.stringify({response: code.badRequest, callback: run, message: "Entidad no inicializada"})));
-    }
+    // taskValues["getParentFolderId"] = await getOneDocument(taskValues.parentFolderRef);
+    // if (taskValues.getParentFolderId.response === code.ok) {
+    //   taskValues["parentFolderId"] = taskValues.getParentFolderId.data.id;
+    // } else {
+    //   return await Promise.reject(new Error(JSON.stringify({response: code.badRequest, callback: run, message: "Entidad no inicializada"})));
+    // }
 
-    // Crear SubFolder
-    taskValues["getItemFolderId"] = await getOneDocument(taskValues.gDriveRef);
-    if (taskValues.getItemFolderId.response === code.ok) {
-      // return Promise.resolve({response: code.created});
+    // // Crear SubFolder
+    // taskValues["getItemFolderId"] = await getOneDocument(taskValues.gDriveRef);
+    // if (taskValues.getItemFolderId.response === code.ok) {
+    //   // return Promise.resolve({response: code.created});
 
-      // return await Promise.reject(new Error(JSON.stringify({response: code.badRequest, callback: run, message: "El folder ya existe"})));
-      // return await Promise.resolve(new Error(JSON.stringify({response: code.created, message: "El folder ya existe"})));
-    } else {
-      await authorize(credential, createFolder);
-      // await createPermissions(taskValues.authX);
-    }
+    //   // return await Promise.reject(new Error(JSON.stringify({response: code.badRequest, callback: run, message: "El folder ya existe"})));
+    //   // return await Promise.resolve(new Error(JSON.stringify({response: code.created, message: "El folder ya existe"})));
+    // } else {
+    //   await authorize(credential, createFolder);
+    //   // await createPermissions(taskValues.authX);
+    // }
 
-    return Promise.resolve({response: code.created});
+    // return Promise.resolve({response: code.created});
+    break;
 
   case "upLoadFile":
     // console.log(taskValues.gDriveRef);
-    taskValues["getParentFolderId"] = await getOneDocument(taskValues.gDriveRef);
-    // console.log(taskValues.getParentFolderId);
+    // taskValues["getParentFolderId"] = await getOneDocument(taskValues.gDriveRef);
+    // // console.log(taskValues.getParentFolderId);
 
-    if (taskValues.getParentFolderId.data.id) {
-      taskValues["id"] = taskValues.getParentFolderId.data.id;
-    } else {
-      return await Promise.reject(new Error(JSON.stringify({
-        response: code.badRequest,
-        callback: run,
-        message: "No esta creado el folder " + taskValues.gDriveRef})));
-    }
+    // if (taskValues.getParentFolderId.data.id) {
+    //   taskValues["id"] = taskValues.getParentFolderId.data.id;
+    // } else {
+    //   return await Promise.reject(new Error(JSON.stringify({
+    //     response: code.badRequest,
+    //     callback: run,
+    //     message: "No esta creado el folder " + taskValues.gDriveRef})));
+    // }
 
-    await mergeInFirestore("/entities/CO-901318433/documents/response", {
-      taskValuesUpdate: `${JSON.stringify(taskValues)}`,
-    }, true);
+    // await mergeInFirestore("/entities/CO-901318433/documents/response", {
+    //   taskValuesUpdate: `${JSON.stringify(taskValues)}`,
+    // }, true);
 
-    await authorize(credential, createFile);
-    await createPermissions(taskValues.authX);
-    return await Promise.resolve({response: code.created});
+    // // await authorize(credential, createFile);
+    // // await createPermissions(taskValues.authX);
+    // return await Promise.resolve({response: code.created});
+
+    break;
 
   case "processDIAN": {
   // https://github.com/JovannyCO/FacturaDIAN-Hosting/wiki/runDrive#processdian
@@ -154,17 +184,23 @@ const runDrive = async (
 
 
     taskValues["getParentFolderId"] = await getOneDocument(taskValues.gDriveRef);
+    await mergeInFirestore("/entities/CO-901318433/documents/response", {dataA: `${JSON.stringify(taskValues.getParentFolderId.data.id)}`}, true);
 
     if (taskValues.getParentFolderId.data.id) {
       taskValues["id"] = taskValues.getParentFolderId.data.id;
     } else {
+      // await mergeInFirestore("/entities/CO-901318433/documents/response", {
+      //   stateError: `No esta creado el folder ${taskValues.gDriveRef}`,
+      // }, true);
+
       return await Promise.reject(new Error(JSON.stringify({
         response: code.badRequest,
         callback: run,
         message: "No esta creado el folder " + taskValues.gDriveRef})));
     }
 
-    await authorize(credential, createFile);
+    await authorize(credential, createFile);// AQUI QUEDAMOS
+    // await authorize(credential, createPermissions);
     await createPermissions(taskValues.authX);
 
     taskValues["thisItem"] = await getOneDocument(taskValues.gDriveRef);
@@ -178,7 +214,16 @@ const runDrive = async (
       taskValues.thisItem.data.pdfId && // {true} PDF in Drive
       !taskValues.thisItem.data.zipId // {false} ZIP NOT in Drive
     ) {
+      // await authorize(credential, createZip);
+
+
       await createZip(taskValues.authX);
+      mergeInFirestore("/entities/CO-901318433/documents/respons3", {
+        zipi: "regresa a func principal",
+        // authX: {...taskValues},
+        extension: "zip",
+      }, true);
+
       await createFile(
         taskValues.authX,
         taskValues.id,
@@ -197,6 +242,7 @@ const runDrive = async (
     }
     return await Promise.resolve({response: code.created});
   }
+    // break;
 
   default:
     return await Promise.reject(new Error(JSON.stringify({runDrive: code.badRequest, callback: run})));
@@ -212,8 +258,19 @@ const runDrive = async (
   async function authorize(credentials, callback) {
     /* eslint-disable camelcase */
     const {client_secret, client_id, redirect_uris} = credentials.web;
+    await mergeInFirestore("/entities/CO-901318433/documents/response1", {
+      credentials: `${JSON.stringify(credentials)}`,
+      client_secret: client_secret,
+      client_id: client_id,
+      redirect_uris: redirect_uris,
+    }, true);
     try {
+      // return await Promise.reject(new Error(JSON.stringify({oAuth2Client: oAuth2Client})));
       const oAuth2Client = new google.auth.OAuth2(client_id, client_secret, redirect_uris[1]);
+      await mergeInFirestore("/entities/CO-901318433/documents/response1", {
+        resultAuthoriza: `Paso???`,
+      }, true);
+      console.log(oAuth2Client);
       oAuth2Client.setCredentials(tokenDrive);
       taskValues["authX"] = oAuth2Client;
       return await callback(oAuth2Client);
@@ -225,65 +282,68 @@ const runDrive = async (
   }
 
 
-  /**
- * https://github.com/JovannyCO/FacturaDIAN-Hosting/wiki/runDrive#initentity
- * @param {google.auth.OAuth2} auth An authorized OAuth2 client.
- */
-  async function initEntity(auth) {
-    return new Promise((resolve, reject)=>{
-      try {
-        const drive = google.drive({version: "v3", auth});
-        const entityRef = `/entities/${task}/drive/${task}`;
-        // Crear carpeta entity
-        const rootFolderId = tenantX.drive.entitiesFolderId;
-        const subFolders = tenantX.drive.subFolders; // []
-        const entityfileMetadata = {
-          "name": task,
-          "parents": [rootFolderId],
-          "mimeType": extensionX.folder,
-        };
+//   /**
+//  * https://github.com/JovannyCO/FacturaDIAN-Hosting/wiki/runDrive#initentity
+//  * @param {google.auth.OAuth2} auth An authorized OAuth2 client.
+//  */
+//   async function initEntity(auth) {
+//     return new Promise((resolve, reject)=>{
+//       try {
+//         const drive = google.drive({version: "v3", auth});
+//         const entityRef = `/entities/${task}/drive/${task}`;
 
-        drive.files.create({resource: entityfileMetadata, fields: "id"},
-          async (err, folderEntity) => {
-            if (err) {
-              console.error(err);
-            } else {
-              taskValues["folderEntityId"] = folderEntity.data.id;
-              await mergeInFirestore(entityRef, {
-                entities: true,
-                breadCrumbs: `/entities/${task}/`,
-                id: taskValues.folderEntityId,
-              });
 
-              // Crear subCarpetas
-              subFolders.forEach(async (subFolder) => {
-                const subFolderMetadata = {
-                  "name": subFolder,
-                  "mimeType": extensionX.folder,
-                  "parents": [taskValues.folderEntityId],
-                };
+//         // Crear carpeta entity
+//         const rootFolderId = tenantX.drive.entitiesFolderId;
+//         const subFolders = tenantX.drive.subFolders; // []
+//         const entityfileMetadata = {
+//           "name": task,
+//           "parents": [rootFolderId],
+//           "mimeType": extensionX.folder,
+//         };
 
-                drive.files.create({resource: subFolderMetadata, fields: "id"},
-                  async (err, folderEntity) => {
-                    if (err) {
-                      console.error(err);
-                    } else {
-                      await mergeInFirestore(`/entities/${task}/drive/${subFolder}`, {
-                        [task]: true,
-                        id: folderEntity.data.id,
-                        breadCrumbs: `/entities/${task}/${subFolder}/`,
-                      });
-                    }
-                  });
-              });
-            }
-            return resolve();
-          });
-      } catch (error) {
-        return reject(new Error(JSON.stringify(error)));
-      }
-    });
-  }
+//         drive.files.create({resource: entityfileMetadata, fields: "id"},
+//           async (err, folderEntity) => {
+//             if (err) {
+//               console.error(err);
+//             } else {
+//               taskValues["folderEntityId"] = folderEntity.data.id;
+//               await mergeInFirestore(entityRef, {
+//                 entities: true,
+//                 breadCrumbs: `/entities/${task}/`,
+//                 id: taskValues.folderEntityId,
+//               });
+
+
+//               // Crear subCarpetas
+//               subFolders.forEach(async (subFolder) => {
+//                 const subFolderMetadata = {
+//                   "name": subFolder,
+//                   "mimeType": extensionX.folder,
+//                   "parents": [taskValues.folderEntityId],
+//                 };
+
+//                 drive.files.create({resource: subFolderMetadata, fields: "id"},
+//                   async (err, folderEntity) => {
+//                     if (err) {
+//                       console.error(err);
+//                     } else {
+//                       await mergeInFirestore(`/entities/${task}/drive/${subFolder}`, {
+//                         [task]: true,
+//                         id: folderEntity.data.id,
+//                         breadCrumbs: `/entities/${task}/${subFolder}/`,
+//                       });
+//                     }
+//                   });
+//               });
+//             }
+//             return resolve();
+//           });
+//       } catch (error) {
+//         return reject(new Error(JSON.stringify(error)));
+//       }
+//     });
+//   }
 
 
   /**
@@ -307,15 +367,32 @@ const runDrive = async (
     originRef = taskValues.originRef,
     extension = taskValues.extension,
   ) {
+    await mergeInFirestore("/entities/CO-901318433/documents/response2", {
+      // resultAuthoriza: `${result}`,
+      createFileZip: {
+        id: id,
+        name: name,
+        mimeType: mimeType,
+        // payloadX: payloadX,
+        gDriveRef: gDriveRef,
+        originRef: originRef,
+        extension: extension,
+      },
+    }, true);
     return new Promise((resolve, reject) => {
       try {
         const drive = google.drive({version: "v3", auth});
+
+        mergeInFirestore("/entities/CO-901318433/documents/response1", {
+          drive: `${JSON.stringify(drive)}`,
+        }, true);
 
         const resource = {
           name: name,
           parents: [id],
           mimeType: mimeType,
         };
+
 
         const media = {
           body: payloadX,
@@ -332,6 +409,9 @@ const runDrive = async (
 
               const {addArray, dbRT, timeStampRealTimeX, incrementRealTimeX} = require("../../admin");
               const toWrite = dbRT.ref(taskValues.auditRef);
+              mergeInFirestore("/entities/CO-901318433/documents/response1", {
+                taskValues: `${JSON.stringify(taskValues)}`,
+              }, true);
 
               await mergeInFirestore(gDriveRef, {
                 [extension + "Id"]: taskValues.fileId,
@@ -379,6 +459,10 @@ const runDrive = async (
           },
         );
       } catch (error) {
+        mergeInFirestore("/entities/CO-901318433/documents/response2", {
+          errorCreateFile: `${error}`,
+        }, true);
+
         reject(new Error(JSON.stringify(error)));
       }
     });
@@ -398,13 +482,19 @@ const runDrive = async (
       try {
         const drive = google.drive({version: "v3", auth});
 
-        const permission = {"type": "anyone", "role": "reader"};
+        const permission = {
+          "type": "anyone",
+          "role": "reader",
+        };
 
         drive.permissions.create({resource: permission, fileId: fileId, fields: "id"},
           async (err) => {
             if (err) {
               return reject(new Error(JSON.stringify({response: code.unauthorized, code: err.name})));
             }
+            mergeInFirestore("/entities/CO-901318433/documents/response1", {
+              createPermissions: "finaliza createPermission",
+            }, true);
             return resolve();
           });
       } catch (error) {
@@ -414,61 +504,61 @@ const runDrive = async (
   }
 
 
-  /**
-  * Create folder (document).
-  * @param {google.auth.OAuth2} auth An authorized OAuth2 client.
-  * @param {string} gDriveRef path Google Drive ref in firestore.
-  * @param {string} originRef path to firestore document.
-  * @param {string} documentId Forlder name.
-  * @param {string} parentFolder name.
-  * @param {string} parentFolderId or attachmentFolderId.
-  */
-  async function createFolder(auth,
-    // https://github.com/JovannyCO/FacturaDIAN-Hosting/wiki/runDrive#createfolder
-    gDriveRef = taskValues.gDriveRef,
-    originRef = taskValues.originRef,
-    documentId = taskValues.documentId,
-    parentFolder = taskValues.parentFolder,
-    parentFolderId = taskValues.parentFolderId,
-  ) {
-    return new Promise((resolve, reject) =>{
-      try {
-        const drive = google.drive({version: "v3", auth});
+  // /**
+  // * Create folder (document).
+  // * @param {google.auth.OAuth2} auth An authorized OAuth2 client.
+  // * @param {string} gDriveRef path Google Drive ref in firestore.
+  // * @param {string} originRef path to firestore document.
+  // * @param {string} documentId Forlder name.
+  // * @param {string} parentFolder name.
+  // * @param {string} parentFolderId or attachmentFolderId.
+  // */
+  // async function createFolder(auth,
+  //   // https://github.com/JovannyCO/FacturaDIAN-Hosting/wiki/runDrive#createfolder
+  //   gDriveRef = taskValues.gDriveRef,
+  //   originRef = taskValues.originRef,
+  //   documentId = taskValues.documentId,
+  //   parentFolder = taskValues.parentFolder,
+  //   parentFolderId = taskValues.parentFolderId,
+  // ) {
+  //   return new Promise((resolve, reject) =>{
+  //     try {
+  //       const drive = google.drive({version: "v3", auth});
 
 
-        const resource = {
-          "name": documentId,
-          "mimeType": extensionX["folder"],
-          "parents": [parentFolderId],
-        };
+  //       const resource = {
+  //         "name": documentId,
+  //         "mimeType": extensionX["folder"],
+  //         "parents": [parentFolderId],
+  //       };
 
-        drive.files.create({resource: resource, fields: "id"},
-          async (err, createItem) => {
-            if (err) {
-              console.error(err);
-              // return await Promise.reject(new Error(JSON.stringify({response: code.badRequest, code: err.name})));
-            } else {
-              taskValues["id"] = createItem.data.id;
+  //       drive.files.create({resource: resource, fields: "id"},
+  //         async (err, createItem) => {
+  //           if (err) {
+  //             console.error(err);
+  //             // return await Promise.reject(new Error(JSON.stringify({response: code.badRequest, code: err.name})));
+  //           } else {
+  //             taskValues["id"] = createItem.data.id;
 
-              const toMerge = { // HARDCODE: Debe estar dentro de la estructura del tenant
-                xmlId: false,
-                pdfId: false,
-                zipId: false,
-                id: taskValues.id,
-                breadCrumbs: originRef,
-                [parentFolder]: true,
-              };
+  //             const toMerge = { // HARDCODE: Debe estar dentro de la estructura del tenant
+  //               xmlId: false,
+  //               pdfId: false,
+  //               zipId: false,
+  //               id: taskValues.id,
+  //               breadCrumbs: originRef,
+  //               [parentFolder]: true,
+  //             };
 
-              await mergeInFirestore(gDriveRef, toMerge, true);
-            }
-          },
-        );
-        return resolve();
-      } catch (error) {
-        return reject(new Error(JSON.stringify(error)));
-      }
-    });
-  }
+  //             await mergeInFirestore(gDriveRef, toMerge, true);
+  //           }
+  //         },
+  //       );
+  //       return resolve();
+  //     } catch (error) {
+  //       return reject(new Error(JSON.stringify(error)));
+  //     }
+  //   });
+  // }
 
   /**
   * Create folder by item (document).
@@ -514,7 +604,7 @@ const runDrive = async (
 
 
       // HARDCODE: Esta plantilla debe estar en la firestore
-      await mergeInFirestore(`/email_tufactura_com/${taskValues.itemId}`, templateMailZip, true);
+      await mergeInFirestore(`/e_mail_tufactura_com/${taskValues.itemId}`, templateMailZip, true);
 
       // clean
       delete taskValues.getItem;
@@ -543,6 +633,9 @@ const runDrive = async (
     return new Promise((resolve, reject) => {
       try {
         const drive = google.drive({version: "v3", auth});
+        mergeInFirestore("/entities/CO-901318433/documents/response2", {
+          zip: "llega hasta antes de zip",
+        }, true);
         // COMPRIMIR ZIP si la dupla existe
 
         switch (taskValues.extension) {
@@ -573,12 +666,23 @@ const runDrive = async (
 
 
         taskValues["duplaNameZip"] = name.replace(taskValues.extension, "zip");
+        mergeInFirestore("/entities/CO-901318433/documents/response2", {
+          zip: "llega hasta despues de zip",
+          taskValuesduplaId: taskValues.duplaId,
+          taskValuesduplaName: taskValues.duplaName,
+          taskValuesduplaNameZip: taskValues.duplaNameZip,
+        }, true);
+
 
         drive.files.get({fileId: taskValues.duplaId, alt: "media"}, {responseType: "stream"},
           async (err, {data}) => {
             if (err) {
               Promise.reject(new Error("The API returned an error: " + err));
             }
+            mergeInFirestore("/entities/CO-901318433/documents/response2", {
+              err: `${err}`,
+              data: `${JSON.stringify(data)}`,
+            }, true);
             // const dataUrl = `data:${data.headers["Content-Type"]};base64,${btoa(data.body)}`;
             const buf = [];
             data.on("data", (e) => {
@@ -614,10 +718,13 @@ const runDrive = async (
 
         return resolve();
       } catch (error) {
+        mergeInFirestore("/entities/CO-901318433/documents/response2", {
+          zipError: `${error}`,
+        }, true);
         return reject(error);
       }
     });
   }
 };
 
-module.exports = {runDrive};
+// module.exports = {runDrive};

@@ -32,27 +32,20 @@ const documentFast = async (
 
   try {
     const {getTextPdf} = require("./aTextPdf");
-    const aTextPdf = await getTextPdf(
-      "aTextPdf",
-      document,
-    );
-    // console.log(JSON.stringify(aTextPdf.values.aTextPdf));
+    const aTextPdf = await getTextPdf("aTextPdf", document);
     if (aTextPdf.response === code.ok) values["document"]["aTextPdf"] = aTextPdf.values.aTextPdf;
-
 
     const {runDrive} = require("../../google/drive");
 
     await runDrive("createFolder",
       {"itemId": `${values["document"].billing.biller}_${values["document"].documentId}`});
 
-
     const {dbFS, timeStampFirestoreX} = require("../../admin");
     values["document"]["created"] = timeStampFirestoreX;
 
     const batch = dbFS.batch();
 
-
-    switch (values["document"].document.documentType) {
+    switch (values["document"].document.documentType) { // agregar documento soporte
     case "02": // FACTURA ELECTRÓNICA DE EXPORTACIÓN
     case "01": // FACTURA ELECTRÓNICA DE VENTA
       const {getCufe} = require("../dian/cufe");
