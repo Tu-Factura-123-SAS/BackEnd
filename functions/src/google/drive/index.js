@@ -87,12 +87,11 @@ const runDrive = async (
   case "initEntity":
     // https://github.com/JovannyCO/FacturaDIAN-Hosting/wiki/runDrive#initentity
     taskValues["entityDrive"] = await getOneDocument(`/entities/${task}/drive/${task}`);
-    // // console.log(taskValues.entityDrive);
     if (taskValues.entityDrive.response === code.ok) {
-      return Promise.reject(new Error(JSON.stringify({response: code.badRequest})));
+      return Promise.resolve(JSON.stringify({response: code.ok, message: "La entidad ya fue inicializada"}));
     } else {
-      return await authorize(credential, initEntity);
-      // return Promise.resolve(JSON.stringify({response: code.created}));
+      await authorize(credential, initEntity);
+      return Promise.resolve(JSON.stringify({response: code.created, message: "La entidad creada"}));
     }
 
   case "createFolder":
