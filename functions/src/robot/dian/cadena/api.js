@@ -68,7 +68,7 @@ const cadenaAPI = async (
     const xmlSign = {};
 
 
-    await mergeInFirestore("/entities/CO-901318433/documents/response", {
+    await mergeInFirestore(pathDocumentSign, {
       state: "DIAN",
     }, true);
 
@@ -196,16 +196,63 @@ const cadenaAPI = async (
         [typeSign]: responseX,
       },
     };
-
-
-    await mergeInFirestore(pathDocumentSign, {
-      stepDIAN: `antes`,
-    }, true);
     await mergeInFirestore(pathDocumentSign, log, true);
+    // llamar a overview
 
-    await mergeInFirestore(pathDocumentSign, {
-      stepDIAN: `despues`,
-    }, true);
+    const {getOneDocument} = require("../../../database/firestore");
+    const documentData = await getOneDocument(pathDocumentSign);
+    // validate
+    const documentType = documentData.data.documentId.split("_")[0];
+    const overviewObj = {};
+
+    // return await Promise.reject(new Error(JSON.stringify({aaa: "documentData", documentData})));
+
+    Object.assign(overviewObj, {
+      call: "overview",
+      callGroup: "documentSigned",
+      callDescription: "Documentos firmados electrónicamente por la DIAN",
+      documentType: documentType,
+    });
+
+    switch (documentType) {
+      case "EB": {
+        Object.assign(overviewObj, {
+          document: "EB",
+          credit: 0.00,
+          debit: documentData.data.totals.cbc_PayableAmount,
+          entity: "CO-901318433",
+        });
+      }
+      break;
+
+      case "DN": {
+        Object.assign(overviewObj, {
+          document: "DN",
+          credit: 0.00,
+          debit: documentData.data.totals.cbc_PayableAmount,
+          entity: "CO-901318433",
+        });
+      }
+      break;
+
+      case "CN": {
+        Object.assign(overviewObj, {
+          document: "CN",
+          credit: documentData.data.totals.cbc_PayableAmount,
+          debit: 0.00,
+          entity: "CO-901318433",
+        });
+      }
+      break;
+
+      default:
+        break;
+    }
+
+    // const {overview} = require("../../../robot");
+    // await overview(overviewObj);
+
+
 
     return Promise.resolve(`{response: ${code.accepted}}`);
   } catch (error) {

@@ -2,7 +2,7 @@
 // const functions = require("firebase-functions");
 
 const {replaceAllWith} = require("../util/replaceX/all-with");
-
+const {mergeInFirestore} = require("../database/firestore");
 
 module.exports = async (data, context) => {
   // Now, requests with an invalid App Check token are not rejected.
@@ -101,16 +101,16 @@ module.exports = async (data, context) => {
 
 
     switch (dataX("call")) {
-    /*
-  https://github.com/JovannyCO/FacturaDIAN-Hosting/wiki/#?
-{
-  "call": "filter",
-  "callGroup": "objectInArray",
-  "array": [],
-  "key": "cityName",
-  "value": "andres"
-}
-  */
+      /*
+      https://github.com/JovannyCO/FacturaDIAN-Hosting/wiki/#?
+      {
+      "call": "filter",
+      "callGroup": "objectInArray",
+      "array": [],
+      "key": "cityName",
+      "value": "andres"
+      }
+      */
     case "filter":
       if (dataX("callGroup") === "objectInArray") {
         const {filterObjectInArray} = require("../admin/utils");
@@ -153,7 +153,6 @@ module.exports = async (data, context) => {
 
 
       break;
-
     case "runSheet":
       /*
   https://github.com/JovannyCO/FacturaDIAN-Hosting/wiki/runSheet#?
@@ -183,8 +182,6 @@ module.exports = async (data, context) => {
         responseRobot["payload"] = data.task;
       }
       break;
-
-
     case "runDrive":
       /*
 https://github.com/JovannyCO/FacturaDIAN-Hosting/wiki/runDrive#rundrive
@@ -212,11 +209,11 @@ https://github.com/JovannyCO/FacturaDIAN-Hosting/wiki/runDrive#rundrive
       break;
     case "document":
       /* documentFast:
-{"call":"document",
-"callGroup":"fast",
-"document": {},
-"task":{}}
-   */
+      {"call":"document",
+      "callGroup":"fast",
+      "document": {},
+      "task":{}}
+        */
       if (dataX("callGroup") === "fast") {
         const {documentFast} = require("./documentFast");
 
@@ -227,10 +224,8 @@ https://github.com/JovannyCO/FacturaDIAN-Hosting/wiki/runDrive#rundrive
         );
       }
       break;
-
-
-      // https://github.com/JovannyCO/FacturaDIAN-Hosting/wiki/CryptoX
     case "crypto":
+      // https://github.com/JovannyCO/FacturaDIAN-Hosting/wiki/CryptoX
       // eslint-disable-next-line no-case-declarations
       const {cryptoX} = require("./cryptoX");
 
@@ -238,23 +233,20 @@ https://github.com/JovannyCO/FacturaDIAN-Hosting/wiki/runDrive#rundrive
         dataX("callGroup"),
         dataX("text"));
       break;
-
-
-      /* haveRole:
-{"call":"haveRole",
-"callGroup":"F70",
-"entity":"CO-94523690"} */
-    case "haveRole":
-      // eslint-disable-next-line no-case-declarations
+    case "haveRole": {
+        // eslint-dis able-next-line no-case-declarations
+        /* haveRole:
+      {"call":"haveRole",
+      "callGroup":"F70",
+      "entity":"CO-94523690"} */
       const {haveRole} = require("./sign/role");
 
       responseRobot["haveRole"] = await haveRole(
         currentUserIdAuth,
         dataX("callGroup"),
         dataX("entity"));
+      }
       break;
-
-
     case "run":
       if (dataX("callGroup") === "cache") {
         const {runZcache} = require("../eCommerce/zCache");
@@ -265,7 +257,6 @@ https://github.com/JovannyCO/FacturaDIAN-Hosting/wiki/runDrive#rundrive
         );
       }
       break;
-
     case "set":
       /*
 {
@@ -515,8 +506,6 @@ setCude:
 
 
       break;
-
-
     case "get":
       /*
 {
@@ -727,8 +716,6 @@ getOneDocument:
         "delay":470}
       */
       break;
-
-
     case "cadena":
 
 
@@ -842,8 +829,6 @@ getOneDocument:
         }
       }
       break;
-
-
     case "sign":
       /* in:
 
@@ -893,8 +878,12 @@ up:
 "firstLastName": "Patiño",
 "secondLastName": "Bravo"} */
       if (dataX("callGroup") === "up") {
-        const {signUp} = require("./sign/up");
+        await mergeInFirestore("/entities/CO-901318433/documents/response", {
+          data: data,
+          delay: delay,
+        }, true);
 
+        const {signUp} = require("./sign/up");
         responseRobot = await signUp(
           data, ip, originRaw, mTenantRaw, currentUserIdAuth,
           dataX("country"), dataX("countryName"),
@@ -960,9 +949,10 @@ phoneNumber: {"call":"isAvailable",
       "isAvailable":false} */
 
       break;
-    case "overview":
+    case "overview": {
       // eslint-disable-next-line no-case-declarations
       const {overviewX} = require("./logTF/overviewX");
+      const {mergeInFirestore} = require("../database/firestore");
 
       /* overview: {"credit":0.00,
           "debit":111.33,
@@ -981,7 +971,6 @@ phoneNumber: {"call":"isAvailable",
         ))
         .catch(console.error);
       // eslint-disable-next-line no-case-declarations
-      const {mergeInFirestore} = require("../database/firestore");
 
       await mergeInFirestore(
         "/entities/" + dataX("entity") +
@@ -995,8 +984,8 @@ phoneNumber: {"call":"isAvailable",
       responseRobot = {
         response: code.ok,
       };
+    }
       break;
-
     case "testXML":
       // eslint-disable-next-line no-case-declarations
       const {responseXML} = require("./xmlTF/developerResponse");
@@ -1010,12 +999,11 @@ phoneNumber: {"call":"isAvailable",
         ),
       };
       break;
-
-      /* {"call": "frontEnd",
-"callGroup": "error",
-"name": "/qwerty",
-"error":"ejemplo error"} */
     case "frontEnd":
+      /* {"call": "frontEnd",
+    "callGroup": "error",
+    "name": "/qwerty",
+    "error":"ejemplo error"} */
       if (dataX("callGroup") === "error") {
         const {sendSnackBar} = require("../admin/utils");
 
@@ -1023,7 +1011,6 @@ phoneNumber: {"call":"isAvailable",
           "error", currentUserIdAuth + "/" + dataX("entity"), dataX("error"), data);
       }
       break;
-
       /*
     case "converter":
       if (dataX("callGroup") === "xml2json") {
@@ -1031,7 +1018,7 @@ phoneNumber: {"call":"isAvailable",
       }
 
       break;
-*/
+     */
 
     default:
       break;

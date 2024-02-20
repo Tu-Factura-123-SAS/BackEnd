@@ -120,7 +120,6 @@ const signUp = (async (
         return sendSnackBar(customMessageSignUp.es_error_create, "error", entityX, error, data);
       });
 
-
     // console.log({userCreated});
     if (userCreated === true) {
       const resolutions = false;
@@ -200,7 +199,8 @@ const signUp = (async (
       );
 
 
-      if (thisEmailX.endsWith("@jovanny.co")) {
+      if (thisEmailX.endsWith("@tufactura.com")) {
+        // if (thisEmailX.endsWith("@jovanny.co")) {
         batch.set(dbFS.doc(`/entities/${entityX}/roles/developer`),
           {
             [entityX]: {
@@ -264,32 +264,29 @@ const signUp = (async (
 
       const responseSetRoles = await setRoles(
         entityX,
-        [{"F00": entityX}],
+        [{"F00": entityX}, {"F30": entityX}, {"F50": entityX}, {"F60": entityX}, {"F70": entityX}],
         "principal",
         true,
         entityX,
         mTenantRaw,
       );
-      console.log({responseSetRoles});
       // .then(async () => {
-      // await sleep(3000);
-      // const {setRolesRun} = require("../customClaims/setRolesRun");
-      // await setRolesRun(
-      //   entityX, // A quien se le asignan los roles.
-      //   entityDataX.entitiesAuth,
-      //   currentX,
-      //   v0private,
-      // );
+      const {sleep} = require("../../admin/utils");
+      await sleep(3000);
+      const {setRolesRun} = require("../customClaims/setRolesRun");
+      await setRolesRun(
+        entityX, // A quien se le asignan los roles.
+        entityDataX.entitiesAuth,
+        currentX,
+        v0private,
+      );
       // });
-
-
+      // console.log({responseSetRoles});
       // Since the user already exists, the login link is sent.
       const messageApp = await signIn(
         ip, data, originRaw,
         entityX, mTenantRaw,
       );
-
-      // console.log("🚀 ~ file: up.js ~ line 544 ~ signUp ~ messageApp", messageApp);
 
       return sendSnackBar(customMessageSignUp.es_create, "success",
         entityX, resolutions, data, messageApp.messageApp);
