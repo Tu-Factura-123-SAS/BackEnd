@@ -51,52 +51,6 @@ const setRoles = async (
 
 
     try {
-      Object.keys(customClaims).forEach((claim) => {
-        // console.log({claim}, customClaims[claim]);
-        Object.keys(customClaims[claim]).forEach((role) => {
-          // console.log({role}, customClaims[claim][role]);
-
-
-          (async () => {
-            authorizedEntities[customClaims[claim][role]] = {};
-            authorizedEntities[customClaims[claim][role]][`${entityX}_${branchOfficeId}`] = `${legalEntityBranchOffice.commertialName}: ${legalEntity.commertialName}`;
-
-            authorizedEntitiesData[customClaims[claim][role]] =
-              await getOneDocument(`/entities/${customClaims[claim][role]}`);
-
-            if (authorizedEntitiesData[customClaims[claim][role]].response === code.ok) {
-              authorizedEntitiesData[customClaims[claim][role]] = authorizedEntitiesData[customClaims[claim][role]].data;
-            } else {
-              authorizedEntitiesData[customClaims[claim][role]] = false;
-            }
-            // console.log({authorizedEntitiesData});
-
-            // console.log(authorizedEntitiesData);
-            // console.log(authorizedEntitiesData[customClaims[claim][role]].businessName);
-            // console.log(authorizedEntitiesData[customClaims[claim][role]].commertialName);
-            // console.log(authorizedEntitiesData[customClaims[claim][role]].typePerson);
-            // const businessName = authorizedEntitiesData[customClaims[claim][role]].businessName || "Pendiente...";
-            const commertialName = authorizedEntitiesData[customClaims[claim][role]].commertialName || "Pendiente...";
-            const typePerson = authorizedEntitiesData[customClaims[claim][role]].typePerson || "Pendiente...";
-
-
-            // Batch por cada uno de los usuarios a los que se le dan permiso
-            batchClaims.set(dbFS.doc(`/entities/${entityX}/roles/${role}`),
-              {
-                [customClaims[claim][role]]: {
-                  enabled: true,
-                  typePerson: typePerson,
-                  // businessName: businessName,
-                  commertialName: commertialName,
-                  branchOffices: addArray(branchOfficeId),
-                },
-              },
-              {merge: true},
-            );
-          })();
-        });
-      });
-
       if (initEntity === true) {
         // console.log(legalEntityBranchOffice);
         // Inicializamos la entidad, sin F00
@@ -202,6 +156,50 @@ const setRoles = async (
           {merge: false});
       }
 
+      Object.keys(customClaims).forEach((claim) => {
+        Object.keys(customClaims[claim]).forEach((role) => {
+          // console.log({role}, customClaims[claim][role]);
+          console.warn("PASA POR ROLES", JSON.stringify({role: role, customClaimsC: customClaims[claim][role]}));
+
+          (async () => {
+            authorizedEntities[customClaims[claim][role]] = {};
+            authorizedEntities[customClaims[claim][role]][`${entityX}_${branchOfficeId}`] = `${legalEntityBranchOffice.commertialName}: ${legalEntity.commertialName}`;
+
+            authorizedEntitiesData[customClaims[claim][role]] =
+              await getOneDocument(`/entities/${customClaims[claim][role]}`);
+
+            if (authorizedEntitiesData[customClaims[claim][role]].response === code.ok) {
+              authorizedEntitiesData[customClaims[claim][role]] = authorizedEntitiesData[customClaims[claim][role]].data;
+            } else {
+              authorizedEntitiesData[customClaims[claim][role]] = false;
+            }
+            // console.log({authorizedEntitiesData});
+
+            // console.log(authorizedEntitiesData);
+            // console.log(authorizedEntitiesData[customClaims[claim][role]].businessName);
+            // console.log(authorizedEntitiesData[customClaims[claim][role]].commertialName);
+            // console.log(authorizedEntitiesData[customClaims[claim][role]].typePerson);
+            // const businessName = authorizedEntitiesData[customClaims[claim][role]].businessName || "Pendiente...";
+            const commertialName = authorizedEntitiesData[customClaims[claim][role]].commertialName || "Pendiente...";
+            const typePerson = authorizedEntitiesData[customClaims[claim][role]].typePerson || "Pendiente...";
+
+
+            // Batch por cada uno de los usuarios a los que se le dan permiso
+            batchClaims.set(dbFS.doc(`/entities/${entityX}/roles/${role}`),
+              {
+                [customClaims[claim][role]]: {
+                  enabled: true,
+                  typePerson: typePerson,
+                  // businessName: businessName,
+                  commertialName: commertialName,
+                  branchOffices: addArray(branchOfficeId),
+                },
+              },
+              {merge: true},
+            );
+          })();
+        });
+      });
 
       batchClaims.set(dbFS.doc(`/entities/${entityX}/logs/setRoles`),
         {
