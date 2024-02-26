@@ -22,6 +22,24 @@ const mergeInFirestore = async (
     });
 };
 
+
+const updateInFirestore = async (
+  routeX,
+  recordX,
+) => {
+  const {dbFS} = require("../../admin");
+
+
+  await dbFS
+    .doc(routeX).update(recordX)
+    .then(() => {
+      return true;
+    })
+    .catch((error) => {
+      return error;
+    });
+};
+
 const waitAndMergeInFirestore = async (
   routeX,
   recordX,
@@ -136,4 +154,5 @@ module.exports = {
   getOneCollection,
   mergeInFirestore,
   waitAndMergeInFirestore,
+  updateInFirestore,
 };
