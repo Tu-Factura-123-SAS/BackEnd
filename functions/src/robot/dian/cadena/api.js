@@ -252,8 +252,6 @@ const cadenaAPI = async (
     // const {overview} = require("../../../robot");
     // await overview(overviewObj);
 
-
-
     return Promise.resolve(`{response: ${code.accepted}}`);
   } catch (error) {
     const log = {

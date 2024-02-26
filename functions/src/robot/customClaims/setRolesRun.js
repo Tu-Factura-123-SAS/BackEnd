@@ -27,6 +27,8 @@ const setRolesRun = async (
   if (currentPrivateV0) {
     rolesRun.v0 = currentPrivateV0;
     await runZcache("signUp", `${currentPrivateV0.setup.authDomain}|${targetEntity}|principal|${targetEntity}`);
+    const resulta = await runZcache("{uidX}_templates", `${targetEntity}|`);
+    console.warn("ANTES DE SETROLESRUN", JSON.stringify({resulta: resulta, targetEntity: targetEntity}));
   }
 
   try {

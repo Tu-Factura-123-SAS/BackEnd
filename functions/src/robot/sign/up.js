@@ -4,6 +4,7 @@ const {customMessageSignUp, customMessageErrorCatch} = require("../../admin/cust
 const {dbFS, users} = require("../../admin");
 const {setRoles} = require("../customClaims/setRoles");
 const deepDeleteFields = require("../../handle/deepDeleteFields");
+const {code} = require("../../admin/responses");
 
 
 const signUp = (async (
@@ -270,26 +271,27 @@ const signUp = (async (
         entityX,
         mTenantRaw,
       );
-      // .then(async () => {
-      const {sleep} = require("../../admin/utils");
-      await sleep(3000);
-      const {setRolesRun} = require("../customClaims/setRolesRun");
-      await setRolesRun(
-        entityX, // A quien se le asignan los roles.
-        entityDataX.entitiesAuth,
-        currentX,
-        v0private,
-      );
-      // });
-      // console.log({responseSetRoles});
-      // Since the user already exists, the login link is sent.
-      const messageApp = await signIn(
-        ip, data, originRaw,
-        entityX, mTenantRaw,
-      );
 
-      return sendSnackBar(customMessageSignUp.es_create, "success",
-        entityX, resolutions, data, messageApp.messageApp);
+      if (responseSetRoles.response === code.accepted) {
+        const {sleep} = require("../../admin/utils");
+        await sleep(3000);
+        const {setRolesRun} = require("../customClaims/setRolesRun");
+        console.warn("ANTES DE SETROLESRUN", JSON.stringify({entityDataX: entityDataX, v0private: v0private, currentX: currentX}));
+        await setRolesRun(
+          entityX, // A quien se le asignan los roles.
+          entityDataX.entitiesAuth,
+          currentX,
+          v0private,
+        );
+        // Since the user already exists, the login link is sent.
+        const messageApp = await signIn(
+          ip, data, originRaw,
+          entityX, mTenantRaw,
+        );
+        return sendSnackBar(customMessageSignUp.es_create, "success", entityX, resolutions, data, messageApp.messageApp);
+      } else {
+        return sendSnackBar(customMessageErrorCatch.es_error_catch, "error", entityX, "Plantilla no existe", data);
+      }
     }
   } catch (error) {
     // console.error(error);
