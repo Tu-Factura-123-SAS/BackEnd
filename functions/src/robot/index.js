@@ -505,6 +505,21 @@ setCude:
   "delay":665} */
 
 
+/* {
+  "call":"set",
+  "callGroup":"landingPage",
+  "path":"/documentos",
+  "forced": false
+}
+*/
+
+      if (dataX("callGroup") === "landingPage") {
+        const {setLandingPage} = require("../eCommerce/customerJourney/setLandingPage");
+        responseRobot["setLandingPage"] = await setLandingPage(dataX("uid"), dataX("path"), dataX("forced"));
+        // uid, path = "", forced = false
+      }
+
+
       break;
     case "get":
       /*
