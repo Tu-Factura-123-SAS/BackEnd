@@ -25,7 +25,6 @@ const signUp = (async (
   const {timeStampFirestoreX} = require("../../admin");
   // const {tenant} = require("../../admin/hardCodeTenants");
   const {v0} = require("../../eCommerce/v0");
-  // const tenantX = tenant(mTenantRaw);
   const tenantV0 = await v0(mTenantRaw);
   const {signIn} = require("./in");
   let entityDataX = {};
@@ -158,8 +157,6 @@ const signUp = (async (
         idNumber: entityNumber[1],
         businessName: displayNameX.toUpperCase(),
         commertialName: displayNameX,
-
-
         // HARDCODE PreSets del TENANT desde Firestore
         currentBranchOffice: "principal",
         currentLandingPage: false,

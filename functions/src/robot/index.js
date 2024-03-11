@@ -646,7 +646,6 @@ if (dataX("callGroup") === "runDriveTest") {
       if (dataX("callGroup") === "link") {
         const {getLink} = require("./sign/link");
 
-
         responseRobot["getLink"] = await getLink(
           context,
           dataX("goToBiller"),

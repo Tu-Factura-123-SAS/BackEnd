@@ -3,11 +3,14 @@
 const {dbFS} = require("../admin");
 const {code} = require("../admin/responses");
 const {getOneDocument, mergeInFirestore} = require("../database/firestore");
+const {tenant} = require("../admin/hardCodeTenants");
 
 const getInitBranchOffice = async (
   currentBranchOfficeData,
   mTenantRaw = "tufactura.com",
 ) => {
+  console.warn("RESPONSE2", JSON.stringify({currentBranchOfficeData: currentBranchOfficeData, mTenantRaw: mTenantRaw}));
+
   return new Promise((resolve, reject) => {
     try {
       // console.log(currentBranchOfficeData.eCommerce);
@@ -18,11 +21,11 @@ const getInitBranchOffice = async (
       } else {
         // En caso de que la sucursal no tenga eCommerce, se toma el init del dominio
 
-        const {tenant} = require("../admin/hardCodeTenants");
-
         const tenantX = tenant(mTenantRaw);
+
         tenantX["commertialName"] = currentBranchOfficeData["commertialName"] || currentBranchOfficeData["businessName"];
-        // console.log(tenantX);
+        console.warn("tenantXAAA", JSON.stringify({tenantX: tenantX}));
+        console.log("FINALIZA");
 
         resolve(tenantX.init);
       }
@@ -41,7 +44,7 @@ async function setCurrentBranchOfficeEcommerce(
 ) {
   const mergeInentity = {};
 
-
+  console.warn("AAAA", JSON.stringify({originRaw: originRaw, currentUser: currentUser, billerId: billerId, branchOffice: branchOffice}));
   const currentBranchOfficeData = await getOneDocument(`/entities/${billerId}/branchOffices/${branchOffice}`);
 
 
@@ -52,12 +55,15 @@ async function setCurrentBranchOfficeEcommerce(
     // console.log("¶¶", currentBranchOfficeDataX.eCommerce.landingPage);
 
     // Traemos la plantilla de la landing page, si no existe, se crea una por defecto.
+    console.warn("RESPONSE", JSON.stringify({currentBranchOfficeDataX: currentBranchOfficeDataX, originRaw: originRaw}));
 
     const landingPage = await getInitBranchOffice(
       currentBranchOfficeDataX,
       originRaw,
-    );
+      );
+      console.log("FINALIZA2");
 
+      console.warn("RESPONSE", JSON.stringify({landingPage: landingPage}));
 
     mergeInentity["current"] = landingPage;
     // mergeInentity["currentLandingPage"] = landingPage;

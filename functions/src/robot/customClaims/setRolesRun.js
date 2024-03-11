@@ -21,6 +21,8 @@ const setRolesRun = async (
     entitiesAuth: Object.assign(initialEntityAuth, currentEntitiesAuth),
   };
 
+  console.warn("ANTES DE SETROLESRUN", JSON.stringify({targetEntity: targetEntity, currentEntitiesAuth: currentEntitiesAuth, currentCustomClaims: currentCustomClaims, currentPrivateV0: currentPrivateV0}));
+
   const rolesRun = {};
 
   // Si hay un objeto privado, lo procesamos
