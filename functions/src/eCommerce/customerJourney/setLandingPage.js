@@ -30,14 +30,10 @@ const {updateInFirestore} = require("../../database/firestore");
  * @throws {Error} Si no se puede completar el viaje del cliente.
  */
 const setLandingPage = async (uid, path = "", forced = false) => {
-    console.warn("llega a func", JSON.stringify({uid: uid, path: path, forced: forced}));
-
     await updateInFirestore(`/rolesRun/${uid}`, {
-        // customClaims: {
-            "customClaims.c.l": [path, forced],
-            "v0.forced": forced,
-            "v0.landingPage": path,
-        // },
+        "customClaims.c.l": [path, forced],
+        "v0.forced": forced,
+        "v0.landingPage": path,
     });
 };
 

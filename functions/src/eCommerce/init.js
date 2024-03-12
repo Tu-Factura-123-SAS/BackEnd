@@ -3,6 +3,7 @@
 const {dbFS} = require("../admin");
 const {code} = require("../admin/responses");
 const {getOneDocument, mergeInFirestore} = require("../database/firestore");
+const {tenant} = require("../admin/hardCodeTenants");
 
 const getInitBranchOffice = async (
   currentBranchOfficeData,
@@ -10,20 +11,12 @@ const getInitBranchOffice = async (
 ) => {
   return new Promise((resolve, reject) => {
     try {
-      // console.log(currentBranchOfficeData.eCommerce);
-      // currentBranchOfficeData["commertialName"] = currentBranchOfficeData["commertialName"] || currentBranchOfficeData["businessName"];
-
       if (currentBranchOfficeData.eCommerce) {
         resolve(currentBranchOfficeData.eCommerce);
       } else {
         // En caso de que la sucursal no tenga eCommerce, se toma el init del dominio
-
-        const {tenant} = require("../admin/hardCodeTenants");
-
         const tenantX = tenant(mTenantRaw);
         tenantX["commertialName"] = currentBranchOfficeData["commertialName"] || currentBranchOfficeData["businessName"];
-        // console.log(tenantX);
-
         resolve(tenantX.init);
       }
     } catch (error) {
@@ -41,29 +34,22 @@ async function setCurrentBranchOfficeEcommerce(
 ) {
   const mergeInentity = {};
 
-
   const currentBranchOfficeData = await getOneDocument(`/entities/${billerId}/branchOffices/${branchOffice}`);
-
 
   if (currentBranchOfficeData.response === code.ok) {
     const currentBranchOfficeDataX = currentBranchOfficeData.data;
-
-
-    // console.log("¶¶", currentBranchOfficeDataX.eCommerce.landingPage);
 
     // Traemos la plantilla de la landing page, si no existe, se crea una por defecto.
 
     const landingPage = await getInitBranchOffice(
       currentBranchOfficeDataX,
       originRaw,
-    );
-
+      );
 
     mergeInentity["current"] = landingPage;
     // mergeInentity["currentLandingPage"] = landingPage;
     // mergeInentity["currentBiller"] = billerId;
     // mergeInentity["currentBranchOffice"] = branchOffice;
-
 
     await mergeInFirestore(`/entities/${currentUser}`, mergeInentity, true);
 

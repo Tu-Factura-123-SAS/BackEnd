@@ -1,223 +1,124 @@
 /* eslint-disable require-jsdoc */
 const {code} = require("../../admin/responses");
 const {sleep} = require("../../admin/utils");
-// const {sleep} = require("../../admin/utils");
-
-
+const {v0} = require("../../eCommerce/v0");
 const {auth, users, dbFS} = require("../../admin");
+const setOperations = require("../customClaims/setOperations.js");
+
 
 const getLink = async (
   context,
   goToBiller,
   goToBillerBranchOffice,
-
-  // newBiller,
-
 ) => {
   let originRaw = false;
   let currentUserIdAuth = false;
   let actionCodeSettings = false;
+  const rolesRun = {};
 
-
-  // const actionCodeSettings = {url: "https://tufactura123.col.marketing", handleCodeInApp: true};
-
-
+ // valida si hay sesión activa
   if (context.auth) {
     originRaw = context.rawRequest.headers.origin;
+    originRaw = originRaw.replace("https://", "");
     currentUserIdAuth = context.auth.uid;
     const goToEntity = {};
-
+    let changedToUid = false;
 
     try {
       goToEntity["customClaims"] = {};
 
       // Nueva funcionalidad para cambiar el facturador
-      if (context.auth.customClaims && context.auth.customClaims.developer) {
-        goToEntity["customClaims"]["current"] = {biller: goToBiller, branchOffice: goToBillerBranchOffice};
-      }
+      // if (context.auth.token && context.auth.token.developer) {
+      //   goToEntity["customClaims"]["c"] = {...context.auth.token.c, b: goToBiller, bo: goToBillerBranchOffice};
+      // }
+      rolesRun["customClaims"] = {};
 
-      //  if (currentUserIdAuth === newBiller) {
-      //  goToEntity["customClaims"]["current"] = { biller: currentUserIdAuth, branchOffice: "principal" };
-      //  } else {
-      //  goToEntity["customClaims"]["current"] = { biller: newBiller, branchOffice: "principal" };
-
-      // Actualizar roles según el nuevo facturador
-      //  await updateRolesForNewBiller(currentUserIdAuth, newBiller);
-
-
-      // goToEntity["customClaims"]["currentBiller"] = `${currentUserIdAuth}_principal`;
-      goToEntity["customClaims"]["current"] = {biller: currentUserIdAuth, branchOffice: "principal"};
-
-
-      // OJO: debe ser el dominio de origen del currentBranchOffice.
+      goToEntity["customClaims"]["c"] = {...context.auth.token.c, b: goToBiller, bo: goToBillerBranchOffice};
+      rolesRun["customClaims"]["c"] = goToEntity["customClaims"]["c"];
+      // // OJO: debe ser el dominio de origen del currentBranchOffice.
       const {setCurrentBranchOfficeEcommerce} = require("../../eCommerce/init");
       goToEntity["domain"] = await setCurrentBranchOfficeEcommerce(originRaw, currentUserIdAuth, goToBiller, goToBillerBranchOffice);
 
-      // console.log(await getCustomClaimsFromRoles(currentUserIdAuth, goToBiller, goToBillerBranchOffice));
+      goToEntity["customClaims"][goToBiller] = true;
+      goToEntity["customClaims"][currentUserIdAuth] = true;
 
-      if (currentUserIdAuth === goToBiller) {
-        goToEntity["customClaims"][currentUserIdAuth] = true;
+      // Consulto roles en currentBiller.
+      const rolesRef = dbFS
+        .collection("entities").doc(goToBiller).collection("roles");
 
+      let roles = await rolesRef
+        .where(`${currentUserIdAuth}.enabled`, "==", true)
+        .get();
 
-        // HARDCODE: Código DUPLICADO - Consulto MIS roles.
-        const myRolesRef = dbFS
-          .collection("entities").doc(currentUserIdAuth).collection("roles");
+        const entityData = {
+          entitiesAuth: {[`CO-300_principal`]: "Usuario Tres", [`CO-1144081081_principal`]: "Test"},
+        };
 
-        let myRoles = await myRolesRef
-          .where(`${currentUserIdAuth}.enabled`, "==", true)
-          .get();
-
-        if (myRoles.docs.length === 0) {
-          myRoles = await myRolesRef
-            .where(`${currentUserIdAuth}.enabled`, "==", true) // CO-1144081388.enabled en coleccion entities/user/roles/
-            .get();
-
-          if (myRoles.docs.length === 0) {
-            return Promise.reject(new Error("⚠️ Acceso denegado"));
-          } else {
-            // goToEntity["customClaims"]["branchOffice"] = "principal";
-            // goToEntity["customClaims"]["currentBiller"] = `${currentUserIdAuth}_principal`;
-            goToEntity["customClaims"]["current"] = {biller: currentUserIdAuth, branchOffice: "principal"};
-          }
-        } else {
-          // goToEntity["customClaims"]["branchOffice"] = goToBillerBranchOffice;
-          // goToEntity["customClaims"]["currentBiller"] = `${currentUserIdAuth}_${goToBillerBranchOffice}`;
-          goToEntity["customClaims"]["current"] = {biller: currentUserIdAuth, branchOffice: goToBillerBranchOffice};
-        }
-
-
-        goToEntity["customClaims"]["domain"] = goToEntity["domain"];
-
-
-        myRoles.forEach((myRol) => {
-          if (myRol.data()[currentUserIdAuth]["enabled"] === true) {
-            if (myRol.id === "developer") {
-              goToEntity["customClaims"]["developer"] = true;
-              // goToEntity["customClaims"]["developer"] = true;
-              // goToEntity["domain"] = originRaw;
-            } else {
-              goToEntity["customClaims"][`${currentUserIdAuth}_${myRol.id}`] = true;
-              // goToEntity["customClaims"][myRol.id] = true;
-            }
-          }
-        });
-      } else {
-        goToEntity["customClaims"][goToBiller] = true;
-        goToEntity["customClaims"][currentUserIdAuth] = true;
-        // console.log(`currentUserIdAuth: ${currentUserIdAuth} <> goToBiller: ${goToBiller}`);
-
-
-        // HARDCODE: Código DUPLICADO - Consulto MIS roles.
-        const myRolesRef = dbFS
-          .collection("entities").doc(currentUserIdAuth).collection("roles");
-
-        let myRoles = await myRolesRef
-          .where(`${currentUserIdAuth}.enabled`, "==", true)
-          // .where(`${currentUserIdAuth}.branchOffices`, "array-contains", goToBillerBranchOffice)
-          .get();
-
-        if (myRoles.docs.length === 0) {
-          myRoles = await myRolesRef
-            .where(`${currentUserIdAuth}.enabled`, "==", true)
-            // .where(`${currentUserIdAuth}.branchOffices`, "array-contains", "principal")
-            .get();
-
-          if (myRoles.docs.length === 0) {
-            return Promise.reject(new Error("⚠️ Acceso denegado"));
-          } else {
-            goToEntity["customClaims"]["current"]["branchOffice"] = "principal";
-            // goToEntity["customClaims"]["currentBiller"] = `${currentUserIdAuth}_principal`;
-            goToEntity["customClaims"]["current"] = {biller: currentUserIdAuth, branchOffice: "principal"};
-          }
-        } else {
-          goToEntity["customClaims"]["current"]["branchOffice"] = goToBillerBranchOffice;
-        }
-
-
-        goToEntity["customClaims"]["current"]["landingPage"] = false;
-
-
-        myRoles.forEach((myRol) => {
-          if (myRol.data()[currentUserIdAuth]["enabled"] === true) {
-            if (myRol.id === "developer") {
-              goToEntity["customClaims"]["developer"] = true;
-              goToEntity["customClaims"]["developer"] = true;
-              goToEntity["customClaims"]["domain"] = goToEntity["domain"];
-              goToEntity["domain"] = originRaw;
-            } else {
-              goToEntity["customClaims"][`${currentUserIdAuth}_${myRol.id}`] = true;
-            // goToEntity["customClaims"][myRol.id] = true;
-            }
-          }
-        });
-
-
-        // console.log(JSON.stringify(goToEntity));
-
-
-        // Consulto roles en currentBiller.
-        const rolesRef = dbFS
-          .collection("entities").doc(goToBiller).collection("roles");
-
-        let roles = await rolesRef
-          .where(`${goToBiller}.enabled`, "==", true)
-          // .where(`${goToBiller}.branchOffices`, "array-contains", goToBillerBranchOffice)
-          .get();
+        rolesRun.customClaims = {};
+        rolesRun.entitiesAuth = entityData.entitiesAuth;
 
         // Si no hay roles en la branchOffice, consulto en la principal.
         if (roles.docs.length === 0) {
-          roles = await rolesRef
+          const rolesRefAuth = dbFS
+          .collection("entities").doc(currentUserIdAuth).collection("roles");
+          roles = await rolesRefAuth
             .where(`${currentUserIdAuth}.enabled`, "==", true)
-            // .where(`${currentUserIdAuth}.branchOffices`, "array-contains", "principal")
             .get();
 
           if (roles.docs.length === 0) {
             return Promise.reject(new Error("⚠️ Acceso denegado"));
           } else {
             goToEntity["customClaims"]["branchOffice"] = "principal";
+            changedToUid = true;
+            goToEntity["customClaims"]["c"] = {...context.auth.token.c, b: currentUserIdAuth, bo: "principal"};
+            rolesRun["customClaims"]["c"] = goToEntity["customClaims"]["c"];
           }
         } else {
           goToEntity["customClaims"]["branchOffice"] = goToBillerBranchOffice;
         }
 
-
         goToEntity["customClaims"]["landingPage"] = false;
+        goToEntity["customClaims"]["domain"] = goToEntity["domain"];
+        goToEntity["domain"] = originRaw;
+        rolesRun.v0 = await v0(goToEntity["domain"]);
+        rolesRun.customClaims.m = [];
 
+        const rolesKeys = Object.keys(roles.docs);
 
-        roles.forEach((rol) => {
-          if (rol.data()[currentUserIdAuth]["enabled"] === true) {
-            if (rol.id === "developer") {
-              goToEntity["customClaims"]["developer"] = true;
-              goToEntity["customClaims"]["developer"] = true;
-              goToEntity["customClaims"]["domain"] = goToEntity["domain"];
-              goToEntity["domain"] = originRaw;
+        for (const rol of rolesKeys) {
+          if (roles.docs[rol].data()[currentUserIdAuth]["enabled"] === true) {
+            rolesRun.customClaims.m.push(roles.docs[rol].id);
+
+            if (roles.docs[rol].id === "developer") {
+              goToEntity.customClaims[roles.docs[rol].id] = true;
+              rolesRun.customClaims[roles.docs[rol].id] = true;
             } else {
-              goToEntity["customClaims"][`${goToBiller}_${rol.id}`] = true;
-              // goToEntity["customClaims"][rol.id] = true;
+              goToEntity["customClaims"][`${goToBiller}_${roles.docs[rol].id}`] = true;
+              const {getOneDocument} = require("../../database/firestore");
+              entityData.rolesOperationsRules = await getOneDocument(`/rolesOperationsRules/${roles.docs[rol].id}`);
+
+              if (entityData.rolesOperationsRules.response === code.ok) {
+                entityData.ignoreCustomClaim = entityData.rolesOperationsRules.data.ignoreCustomClaim || false;
+                await setOperations(entityData, rolesRun);
+              }
             }
           }
-        });
-      }
-      // console.log(goToEntity.data.entitiesAuth);
-
-      //  const roles = await getRolesForUser(currentUserIdAuth, newBiller);
-      //  configureCustomClaims(goToEntity["customClaims"], roles);
+        }
     } catch (error) {
-      console.log(error.message);
+      return Promise.reject(new Error(error.message));
     }
 
-
+    goToEntity["domain"] = "https://" + goToEntity["domain"];
     actionCodeSettings = {
       url: goToEntity["domain"],
       handleCodeInApp: true,
       dynamicLinkDomain: "localhost5000.page.link",
     };
-    const claims = goToEntity["customClaims"];
+    const claims = {...rolesRun["customClaims"], c: goToEntity["customClaims"]["c"], developer: goToEntity["customClaims"]["developer"]};
     await users.setCustomUserClaims(currentUserIdAuth, claims)
       .then(async () => {
-        // await sleep(666);
-        await users.revokeRefreshTokens(currentUserIdAuth);
         await sleep(666);
+        await users.revokeRefreshTokens(currentUserIdAuth);
       })
       .catch((error) => {
         return Promise.reject(new Error(error.message));
@@ -227,12 +128,14 @@ const getLink = async (
     try {
       let link = "";
       const uid = await users.getUserByUid(currentUserIdAuth);
+
       if (uid) {
         link = await auth.generateSignInWithEmailLink(
           uid.email, actionCodeSettings);
         return Promise.resolve({
           response: code.ok,
           link: link,
+          changedToUid: changedToUid,
         });
       } else {
         return Promise.reject(new Error("⚠️ No se encontró el usuario."));
@@ -245,59 +148,6 @@ const getLink = async (
   }
 };
 
-// async function updateRolesForNewBiller(currentUserId, newBiller) {
-  // try {
-    // Lógica para actualizar roles según el nuevo facturador
-    // const newBillerRoles = await dbFS.collection("entities").doc(newBiller).collection("roles").get();
-
-    // Actualizar roles del usuario actual con los roles del nuevo facturador
-    //  newBillerRoles.forEach((role) => {
-      // const roleId = role.id;
-      // const roleData = role.data();
-
-      // Lógica para actualizar roles del usuario actual según el nuevo facturador
-      // dbFS.collection("entities").doc(currentUserId).collection("roles").doc(roleId).set(roleData);
-    // });
-    // return Promise.resolve();
-  // } catch (error) {
-    // return Promise.reject(new Error(`Error al actualizar roles: ${error.message}`));
-  // }
-// }
-
-// async function getRolesForUser(currentUserId, newBiller) {
-  //  try {
-    // Lógica para obtener roles del usuario según el nuevo facturador
-    // Aquí asumo que los roles del usuario están almacenados en una colección dentro del documento del usuario.
-    //  const userRolesSnapshot = await dbFS.collection("entities").doc(currentUserId).collection("roles").get();
-    //  const userRoles = {};
-
-    // Construir la estructura de roles del usuario
-    //  userRolesSnapshot.forEach((role) => {
-    //  const roleId = role.id;
-    //  const roleData = role.data();
-    //  userRoles[roleId] = roleData;
-    //  });
-
-    //  return Promise.resolve(userRoles);
-  //  } catch (error) {
-  //  return Promise.reject(new Error(`Error al obtener roles del usuario: ${error.message}`));
-  //  }
-//  }
-
-//  function configureCustomClaims(customClaims, roles) {
-//  try {
-    // Lógica para configurar customClaims según los roles
-    // Aquí asumo que los roles y customClaims tienen una relación directa.
-    //  for (const roleId in roles) {
-    //  const roleValue = roles[roleId];
-    //  customClaims[roleId] = roleValue;
-    //  }
-
-    //  return Promise.resolve();
-  //  } catch (error) {
-  //  return Promise.reject(new Error(`Error al configurar customClaims: ${error.message}`));
-  //  }
-//  }
 module.exports = {
   getLink,
 };

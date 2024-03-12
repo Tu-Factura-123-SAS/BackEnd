@@ -515,11 +515,10 @@ setCude:
 
       if (dataX("callGroup") === "landingPage") {
         const {setLandingPage} = require("../eCommerce/customerJourney/setLandingPage");
-        responseRobot["setLandingPage"] = await setLandingPage(dataX("uid"), dataX("path"), dataX("forced"));
+        const forced = dataX("forced") === true ? dataX("forced") : false;
+        responseRobot["setLandingPage"] = await setLandingPage(dataX("uid"), dataX("path"), forced);
         // uid, path = "", forced = false
       }
-
-
       break;
     case "get":
       /*
@@ -646,7 +645,6 @@ if (dataX("callGroup") === "runDriveTest") {
 } */
       if (dataX("callGroup") === "link") {
         const {getLink} = require("./sign/link");
-
 
         responseRobot["getLink"] = await getLink(
           context,

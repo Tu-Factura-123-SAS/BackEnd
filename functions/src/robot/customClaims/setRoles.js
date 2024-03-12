@@ -159,7 +159,6 @@ const setRoles = async (
       Object.keys(customClaims).forEach((claim) => {
         Object.keys(customClaims[claim]).forEach((role) => {
           // console.log({role}, customClaims[claim][role]);
-          console.warn("PASA POR ROLES", JSON.stringify({role: role, customClaimsC: customClaims[claim][role]}));
 
           (async () => {
             authorizedEntities[customClaims[claim][role]] = {};

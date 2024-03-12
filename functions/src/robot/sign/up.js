@@ -25,7 +25,6 @@ const signUp = (async (
   const {timeStampFirestoreX} = require("../../admin");
   // const {tenant} = require("../../admin/hardCodeTenants");
   const {v0} = require("../../eCommerce/v0");
-  // const tenantX = tenant(mTenantRaw);
   const tenantV0 = await v0(mTenantRaw);
   const {signIn} = require("./in");
   let entityDataX = {};
@@ -158,8 +157,6 @@ const signUp = (async (
         idNumber: entityNumber[1],
         businessName: displayNameX.toUpperCase(),
         commertialName: displayNameX,
-
-
         // HARDCODE PreSets del TENANT desde Firestore
         currentBranchOffice: "principal",
         currentLandingPage: false,
@@ -276,7 +273,6 @@ const signUp = (async (
         const {sleep} = require("../../admin/utils");
         await sleep(3000);
         const {setRolesRun} = require("../customClaims/setRolesRun");
-        console.warn("ANTES DE SETROLESRUN", JSON.stringify({entityDataX: entityDataX, v0private: v0private, currentX: currentX}));
         await setRolesRun(
           entityX, // A quien se le asignan los roles.
           entityDataX.entitiesAuth,
@@ -294,7 +290,6 @@ const signUp = (async (
       }
     }
   } catch (error) {
-    // console.error(error);
     return sendSnackBar(customMessageErrorCatch.es_error_catch,
       "error", entityX, error, data);
   }
