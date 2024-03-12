@@ -75,7 +75,6 @@ const runZcache = async (fx, parameters) => {
       // Interpolar campos.
       const {interpolateString} = require("../admin/utils");
       const queryPersonalizedTemplates = interpolateString(template.data.queries.queryPersonalizedTemplates.collection, dataX);
-      console.warn("dentro DE SETROLESRUN", JSON.stringify({queryPersonalizedTemplates: queryPersonalizedTemplates, dataX: dataX, parameters: parameters}));
 
       template.data.queries.queryPersonalizedTemplates.collection = queryPersonalizedTemplates;
 

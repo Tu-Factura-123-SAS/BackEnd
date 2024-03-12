@@ -9,24 +9,14 @@ const getInitBranchOffice = async (
   currentBranchOfficeData,
   mTenantRaw = "tufactura.com",
 ) => {
-  console.warn("RESPONSE2", JSON.stringify({currentBranchOfficeData: currentBranchOfficeData, mTenantRaw: mTenantRaw}));
-
   return new Promise((resolve, reject) => {
     try {
-      // console.log(currentBranchOfficeData.eCommerce);
-      // currentBranchOfficeData["commertialName"] = currentBranchOfficeData["commertialName"] || currentBranchOfficeData["businessName"];
-
       if (currentBranchOfficeData.eCommerce) {
         resolve(currentBranchOfficeData.eCommerce);
       } else {
         // En caso de que la sucursal no tenga eCommerce, se toma el init del dominio
-
         const tenantX = tenant(mTenantRaw);
-
         tenantX["commertialName"] = currentBranchOfficeData["commertialName"] || currentBranchOfficeData["businessName"];
-        console.warn("tenantXAAA", JSON.stringify({tenantX: tenantX}));
-        console.log("FINALIZA");
-
         resolve(tenantX.init);
       }
     } catch (error) {
@@ -44,32 +34,22 @@ async function setCurrentBranchOfficeEcommerce(
 ) {
   const mergeInentity = {};
 
-  console.warn("AAAA", JSON.stringify({originRaw: originRaw, currentUser: currentUser, billerId: billerId, branchOffice: branchOffice}));
   const currentBranchOfficeData = await getOneDocument(`/entities/${billerId}/branchOffices/${branchOffice}`);
-
 
   if (currentBranchOfficeData.response === code.ok) {
     const currentBranchOfficeDataX = currentBranchOfficeData.data;
 
-
-    // console.log("¶¶", currentBranchOfficeDataX.eCommerce.landingPage);
-
     // Traemos la plantilla de la landing page, si no existe, se crea una por defecto.
-    console.warn("RESPONSE", JSON.stringify({currentBranchOfficeDataX: currentBranchOfficeDataX, originRaw: originRaw}));
 
     const landingPage = await getInitBranchOffice(
       currentBranchOfficeDataX,
       originRaw,
       );
-      console.log("FINALIZA2");
-
-      console.warn("RESPONSE", JSON.stringify({landingPage: landingPage}));
 
     mergeInentity["current"] = landingPage;
     // mergeInentity["currentLandingPage"] = landingPage;
     // mergeInentity["currentBiller"] = billerId;
     // mergeInentity["currentBranchOffice"] = branchOffice;
-
 
     await mergeInFirestore(`/entities/${currentUser}`, mergeInentity, true);
 

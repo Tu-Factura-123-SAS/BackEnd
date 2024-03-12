@@ -273,7 +273,6 @@ const signUp = (async (
         const {sleep} = require("../../admin/utils");
         await sleep(3000);
         const {setRolesRun} = require("../customClaims/setRolesRun");
-        console.warn("ANTES DE SETROLESRUN", JSON.stringify({entityDataX: entityDataX, v0private: v0private, currentX: currentX}));
         await setRolesRun(
           entityX, // A quien se le asignan los roles.
           entityDataX.entitiesAuth,
@@ -291,7 +290,6 @@ const signUp = (async (
       }
     }
   } catch (error) {
-    // console.error(error);
     return sendSnackBar(customMessageErrorCatch.es_error_catch,
       "error", entityX, error, data);
   }

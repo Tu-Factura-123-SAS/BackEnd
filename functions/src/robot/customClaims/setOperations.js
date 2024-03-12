@@ -8,7 +8,6 @@
 async function setOperations(entityDataX, rolesRun) {
   // Obtengo las operaciones del objeto rolesOperationsRules.data.
   const operations = Object.keys(entityDataX.rolesOperationsRules.data);
-  console.warn("setOperations", JSON.stringify({entityDataX: entityDataX, rolesRun: rolesRun}));
 
   operations.forEach((operation) => {
     const operationLetter = operation.charAt(0); // Primera letra de la operación

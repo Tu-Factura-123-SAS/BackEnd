@@ -37,7 +37,6 @@ const getLink = async (
         goToEntity["customClaims"]["c"] = {...context.auth.token.c, b: goToBiller, bo: goToBillerBranchOffice};
         // goToEntity["customClaims"]["current"] = {biller: goToBiller, branchOffice: goToBillerBranchOffice};
       }
-      console.warn("FRONT CLAIMS", JSON.stringify({claiims: context.auth}));
 
       //  if (currentUserIdAuth === newBiller) {
         //  goToEntity["customClaims"]["current"] = { biller: currentUserIdAuth, branchOffice: "principal" };
