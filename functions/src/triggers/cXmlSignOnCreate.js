@@ -25,7 +25,7 @@ module.exports = async (snap, context) => {
 
 
   try {
-    xml = await cadenaAPI(data["tenant"], data["base64"], data["xmlPath"], data["function"]);
+    xml = await cadenaAPI(data["tenant"], data["base64"], data["xmlPath"], data["function"], data["seller"]);
     /* if (
       xml.statusCode === code.ok ||
       xml.errorMessage === "Batch en proceso de validación."

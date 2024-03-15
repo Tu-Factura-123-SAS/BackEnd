@@ -8,6 +8,7 @@ const cadenaAPI = async (
   xml, // En base64 sin comillas dobles
   pathOutXML, // Donde se almacena la respuesta
   modeAPI,
+  seller,
 ) => {
   if (xml === undefined) {
     return await Promise.reject(new Error(`cadenaAPI SIN XML ${pathOutXML}`));
@@ -29,6 +30,7 @@ const cadenaAPI = async (
   let responseX = {};
   let pathDocumentSign = "";
   let typeSign;
+  let docDelelete;
 
   try {
     switch (modeAPI) {
@@ -52,8 +54,7 @@ const cadenaAPI = async (
       return await Promise.reject(new Error(`cadenaAPI modeAPI ${modeAPI}  path: ${pathOutXML}`));
     }
 
-
-    let docDelelete = pathOutXML.split("/");
+    docDelelete = pathOutXML.split("/");
     const pathDocumentStateEntity = `/entities/${docDelelete[2]}`;
     pathDocumentSign = `/entities/${docDelelete[2]}/documents/${docDelelete[4]}`;
     const itemId = `${docDelelete[2]}_${docDelelete[4]}`;
@@ -70,6 +71,7 @@ const cadenaAPI = async (
 
     await mergeInFirestore(pathDocumentSign, {
       state: "DIAN",
+      docDelelete: docDelelete,
     }, true);
 
 
@@ -100,9 +102,10 @@ const cadenaAPI = async (
       xmlResponse = cryptoX("deco-base64-utf8", responseX.document):
       xmlResponse = "NO XML";
 
-      await mergeInFirestore("/entities/CO-901318433/documents/response", {
+      await mergeInFirestore("/entities/CO-901318433/documents/response2", {
         stateError: `cadenaAPI fetch ${JSON.stringify(responseX)}`,
         statusCode: responseX.statusCode,
+        docDelelete: docDelelete,
       }, true);
       switch (responseX.statusCode) {
         case 200:
@@ -117,6 +120,7 @@ const cadenaAPI = async (
         await mergeInFirestore(pathDocumentStateEntity, {
           notifications: {
             entity: {[documentState]: emoji.check}},
+            docDelelete: docDelelete,
         }, true);
 
 
@@ -192,6 +196,7 @@ const cadenaAPI = async (
     const log = {
       "state": rootResponse.state,
       "Signed": rootResponse.Signed,
+      "docDelelete": docDelelete,
       "  dianResponse": {
         [typeSign]: responseX,
       },
@@ -201,11 +206,8 @@ const cadenaAPI = async (
 
     const {getOneDocument} = require("../../../database/firestore");
     const documentData = await getOneDocument(pathDocumentSign);
-    // validate
     const documentType = documentData.data.documentId.split("_")[0];
     const overviewObj = {};
-
-    // return await Promise.reject(new Error(JSON.stringify({aaa: "documentData", documentData})));
 
     Object.assign(overviewObj, {
       call: "overview",
@@ -214,13 +216,16 @@ const cadenaAPI = async (
       documentType: documentType,
     });
 
+    const entity = docDelelete.split("/")[2];
+    const entityId = entity.split("_")[0];
+
     switch (documentType) {
       case "EB": {
         Object.assign(overviewObj, {
           document: "EB",
           credit: 0.00,
           debit: documentData.data.totals.cbc_PayableAmount,
-          entity: "CO-901318433",
+          entity: entityId,
         });
       }
       break;
@@ -230,7 +235,7 @@ const cadenaAPI = async (
           document: "DN",
           credit: 0.00,
           debit: documentData.data.totals.cbc_PayableAmount,
-          entity: "CO-901318433",
+          entity: entityId,
         });
       }
       break;
@@ -240,7 +245,7 @@ const cadenaAPI = async (
           document: "CN",
           credit: documentData.data.totals.cbc_PayableAmount,
           debit: 0.00,
-          entity: "CO-901318433",
+          entity: entityId,
         });
       }
       break;
@@ -249,13 +254,50 @@ const cadenaAPI = async (
         break;
     }
 
-    // const {overview} = require("../../../robot");
-    // await overview(overviewObj);
+    let debitX = 0.00;
+    let creditX = 0.00;
+
+    const sellerId = seller.split("/")[2];
+    const {incrementFireStoreX} = require("../../../admin");
+
+    if (overviewObj.debit) {
+      debitX = incrementFireStoreX(overviewObj.debit);
+    }
+
+    if (overviewObj.credit) {
+      creditX = incrementFireStoreX(overviewObj.credit);
+    }
+    const {overviewX} = require("../../logTF/overviewX");
+    const overviewBiller = overviewX(
+      sellerId,
+      overviewObj.document, debitX, creditX,
+      overviewObj.call, overviewObj.callGroup, overviewObj.callDescription,
+    );
+
+    await mergeInFirestore(
+      "/entities/" + overviewObj.entity +
+      "/overview/global",
+      overviewBiller,
+    ).catch(console.error);
+    // eslint-disable-next-line no-case-declarations
+
+    const overviewAuth = overviewX(
+      sellerId,
+      overviewObj.document, debitX, creditX,
+      overviewObj.call, overviewObj.callGroup, overviewObj.callDescription,
+    );
+    await mergeInFirestore(
+      "/entities/" + overviewObj.entity +
+      "/overview/" + sellerId,
+      overviewAuth,
+      )
+      .catch(console.error);
 
     return Promise.resolve(`{response: ${code.accepted}}`);
   } catch (error) {
     const log = {
       "state": `${emoji.cross} ${responseX.statusCode || "Error"}`,
+      "docDelelete": docDelelete[2],
       "  dianResponse": {
         [typeSign]: responseX,
       },
