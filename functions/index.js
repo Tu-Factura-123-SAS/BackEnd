@@ -105,3 +105,10 @@ exports.v0 = functions.https.onRequest(async (req, res) => {
     await tenantHandler(req, res);
   });
 });
+
+exports.api = functions.https.onRequest(async (req, res) => {
+  console.warn("ANTES");
+  const {callApiFunction} = require("./src/api");
+  const response = await callApiFunction(req, res);
+  res.status(response.response).send(response);
+});
