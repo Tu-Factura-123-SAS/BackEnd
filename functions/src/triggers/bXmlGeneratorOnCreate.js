@@ -36,6 +36,7 @@ module.exports = async (snap, context) => {
         xmlPath: data[" task"]["xmlPath"],
         templatePath: data[" task"]["templatePath"],
         tenant: data[" task"]["tenant"],
+        seller: data["seller"],
       });
 
       batch.set(logRef, {
